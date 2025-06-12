@@ -1,0 +1,11 @@
+<!doctype html>
+<title>Perfil de Persona</title>
+<h2>Datos de la Persona</h2>
+<ul>
+  <li><strong>Nombres:</strong> {{ p[1] }}</li>
+  <li><strong>Apellidos:</strong> {{ p[2] }}</li>
+  <li><strong>Cédula:</strong> {{ p[3] }}</li>
+  <li><strong>Fecha de Emisión:</strong> {{ p[4] }}</li>
+  <li><strong>Cargo:</strong> {{ p[5] }}</li>
+</ul>
+<a href="/">Volver</a>
