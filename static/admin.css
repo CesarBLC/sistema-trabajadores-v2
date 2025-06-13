@@ -1,0 +1,24 @@
+/* Solo para admin_dashboard.html */
+.admin-body {
+    background: linear-gradient(135deg, #FFCC00 0%, #CF142B 50%, #00247D 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.admin-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    /* resto de estilos específicos del header admin */
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+/* etc... */
