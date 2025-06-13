@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Trabajador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 50%, #00247D 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-container {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #CF142B 0%, #FFCC00 100%);
+            padding: 30px 25px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #CF142B 0%, #CF142B 40%, #FFCC00 40%, #FFCC00 100%);
+            opacity: 0.9;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .union-title {
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+        }
+
+        .photo-container {
+            position: relative;
+            margin: 20px auto;
+            width: 180px;
+            height: 180px;
+        }
+
+        .photo-frame {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FFCC00, #ffd700);
+            border-radius: 50%;
+            padding: 8px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .photo-frame::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, #CF142B, #00247D, #FFCC00);
+            border-radius: 50%;
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .photo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #999;
+            border: 4px solid white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .worker-name {
+            color: #00247D;
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            margin: 25px 0 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .cargo-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(207, 20, 43, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .cargo-label {
+            background: #FFCC00;
+            color: #00247D;
+            padding: 4px 12px;
+            border-radius: 15px 0 0 15px;
+            font-size: 12px;
+            font-weight: 900;
+            margin-right: 10px;
+        }
+
+        .info-section {
+            padding: 30px;
+            background: white;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            border-left: 5px solid #FFCC00;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-item:nth-child(even) {
+            border-left-color: #CF142B;
+        }
+
+        .info-item:nth-child(3n) {
+            border-left-color: #00247D;
+        }
+
+        .info-label {
+            font-weight: 900;
+            color: #00247D;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 120px;
+            margin-right: 15px;
+        }
+
+        .info-value {
+            font-weight: 700;
+            color: #333;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #00247D 0%, #CF142B 100%);
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shine 3s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .venezuela-flag {
+            width: 200px;
+            height: 20px;
+            border-radius: 10px;
+            background: linear-gradient(to right, 
+                #FFCC00 0%, #FFCC00 33.33%, 
+                #00247D 33.33%, #00247D 66.66%, 
+                #CF142B 66.66%, #CF142B 100%);
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .venezuela-flag::after {
+            content: '⭐⭐⭐⭐⭐⭐⭐⭐';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 8px;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .footer-text {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+
+
+        .verified-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card-container {
+                margin: 10px;
+                max-width: none;
+            }
+            
+
+            
+            .worker-name {
+                font-size: 28px;
+            }
+            
+            .photo-container {
+                width: 150px;
+                height: 150px;
+            }
+        }
+
+        /* Partículas flotantes */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; top: 20%; background: #FFCC00; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 80%; top: 80%; background: #CF142B; animation-delay: -2s; }
+        .particle:nth-child(3) { left: 60%; top: 40%; background: #00247D; animation-delay: -4s; }
+        .particle:nth-child(4) { left: 90%; top: 10%; background: #FFCC00; animation-delay: -1s; }
+        .particle:nth-child(5) { left: 20%; top: 90%; background: #CF142B; animation-delay: -3s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Partículas flotantes -->
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+
+
+    <!-- Tarjeta del trabajador -->
+    <div class="card-container">
+        <!-- Badge de verificado -->
+        <div class="verified-badge">
+            ✓ Verificado
+        </div>
+
+        <!-- Header con título del sindicato -->
+        <div class="card-header">
+            <div class="header-bg"></div>
+            <div class="header-content">
+                <div class="union-title">
+                    Unión Bolivariana de Trabajadores de la<br>
+                    Industria de la Construcción, Cemento, Madera<br>
+                    Maquinarias Pesadas, Vialidades y Similares de<br>
+                    la República Bolivariana de Venezuela
+                </div>
+                
+                <!-- Foto del trabajador -->
+                <div class="photo-container">
+                    <div class="photo-frame">
+                        <!-- Aquí iría la foto si la tienes en tu base de datos -->
+                        <div class="photo-placeholder">
+                            👤
+                        </div>
+                        <!-- Para cuando tengas fotos, usa esto:
+                        <img src="ruta_de_la_foto" alt="Foto del trabajador" class="photo">
+                        -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nombre del trabajador -->
+        <div class="worker-name">
+            {{ persona[1] }} {{ persona[2] }}
+        </div>
+
+        <!-- Badge del cargo -->
+        <div style="text-align: center;">
+            <div class="cargo-badge">
+                <span class="cargo-label">Cargo:</span>
+                {{ persona[5] }}
+            </div>
+        </div>
+
+        <!-- Información del trabajador -->
+        <div class="info-section">
+            <div class="info-item">
+                <div class="info-label">Nombres:</div>
+                <div class="info-value">{{ persona[1] }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Apellidos:</div>
+                <div class="info-value">{{ persona[2] }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">N° Cédula:</div>
+                <div class="info-value">{{ persona[3] }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">F/ Emisión:</div>
+                <div class="info-value">{{ persona[4] }}</div>
+            </div>
+        </div>
+
+        <!-- Footer con bandera de Venezuela -->
+        <div class="footer">
+            <div class="venezuela-flag"></div>
+            <div class="footer-text">
+                República Bolivariana de Venezuela
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Efecto de carga suave
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.8s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Efecto de parallax suave en las partículas
+        document.addEventListener('mousemove', function(e) {
+            const particles = document.querySelectorAll('.particle');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            particles.forEach((particle, index) => {
+                const speed = (index + 1) * 0.5;
+                particle.style.transform += ` translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
