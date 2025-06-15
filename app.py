@@ -48,23 +48,57 @@ def inicio():
 def consultar_trabajador():
     cedula = request.form['cedula'].strip()
     
-    conn = get_db_connection()
-    persona = conn.execute("SELECT * FROM personas WHERE cedula = ?", (cedula,)).fetchone()
-    conn.close()
+    # Debug: imprimir lo que se está buscando
+    print(f"🔍 Buscando cédula: '{cedula}' (longitud: {len(cedula)})")
     
-    if persona:
-        # CORREGIDO: Convertir Row a dict para el template
-        persona_dict = {
-            'id': persona[0],
-            'nombres': persona[1], 
-            'apellidos': persona[2],
-            'cedula': persona[3],
-            'fecha_emision': persona[4],
-            'cargo': persona[5]
-        }
-        return render_template('perfil_trabajador.html', persona=persona_dict)
-    else:
-        flash('No se encontró ningún trabajador con esa cédula', 'error')
+    try:
+        conn = get_db_connection()
+        
+        # Primero, verificar cuántos registros hay en total
+        total_registros = conn.execute("SELECT COUNT(*) FROM personas").fetchone()[0]
+        print(f"📊 Total de registros en BD: {total_registros}")
+        
+        # Búsqueda exacta
+        persona = conn.execute("SELECT * FROM personas WHERE cedula = ?", (cedula,)).fetchone()
+        
+        if not persona:
+            # Búsqueda alternativa quitando espacios de ambos lados
+            print("❌ No encontrado con búsqueda exacta, probando búsqueda con TRIM...")
+            persona = conn.execute("SELECT * FROM personas WHERE TRIM(cedula) = ?", (cedula,)).fetchone()
+            
+            if not persona:
+                # Mostrar todas las cédulas para debug
+                print("🔍 Mostrando todas las cédulas en la BD para debug:")
+                todas_cedulas = conn.execute("SELECT cedula FROM personas").fetchall()
+                for i, (c,) in enumerate(todas_cedulas, 1):
+                    print(f"  {i}. '{c}' (longitud: {len(c)})")
+        
+        conn.close()
+        
+        if persona:
+            print("✅ Trabajador encontrado!")
+            # Convertir Row a dict para el template
+            persona_dict = {
+                'id': persona[0],
+                'nombres': persona[1], 
+                'apellidos': persona[2],
+                'cedula': persona[3],
+                'fecha_emision': persona[4],
+                'cargo': persona[5]
+            }
+            return render_template('perfil_trabajador.html', persona=persona_dict)
+        else:
+            print("❌ Trabajador no encontrado después de todas las búsquedas")
+            flash('No se encontró ningún trabajador con esa cédula', 'error')
+            return redirect(url_for('inicio'))
+            
+    except sqlite3.Error as e:
+        print(f"❌ Error de base de datos: {e}")
+        flash('Error al consultar la base de datos', 'error')
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        print(f"❌ Error general: {e}")
+        flash('Error interno del servidor', 'error')
         return redirect(url_for('inicio'))
 
 # RUTAS DE AUTENTICACIÓN
@@ -105,7 +139,7 @@ def agregar_persona():
     if request.method == 'POST':
         nombres = request.form['nombres'].strip()
         apellidos = request.form['apellidos'].strip()
-        cedula = request.form['cedula'].strip()
+        cedula = request.form['cedula'].strip()  # Esto ya está bien
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
 
@@ -113,6 +147,14 @@ def agregar_persona():
         if not all([nombres, apellidos, cedula, fecha_emision, cargo]):
             flash('Todos los campos son obligatorios', 'error')
             return render_template('agregar_persona.html')
+
+        # Validar que la cédula solo contenga números
+        if not cedula.isdigit():
+            flash('La cédula debe contener solo números', 'error')
+            return render_template('agregar_persona.html')
+
+        # Debug: mostrar lo que se va a guardar
+        print(f"💾 Guardando cédula: '{cedula}' (longitud: {len(cedula)})")
 
         # Verificar si ya existe la cédula
         conn = get_db_connection()
@@ -136,6 +178,8 @@ def agregar_persona():
             verificacion = conn.execute("SELECT * FROM personas WHERE id = ?", (persona_id,)).fetchone()
             
             if verificacion:
+                print(f"✅ Trabajador guardado exitosamente con cédula: '{verificacion[3]}'")
+                
                 # Generar QR que apunte al perfil público
                 qr_data = url_for('ver_perfil_publico', cedula=cedula, _external=True)
                 qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -160,6 +204,7 @@ def agregar_persona():
                 return render_template('agregar_persona.html')
                 
         except sqlite3.Error as e:
+            print(f"❌ Error al insertar en BD: {e}")
             flash(f'Error en la base de datos: {str(e)}', 'error')
             conn.rollback()
             conn.close()
