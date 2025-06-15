@@ -281,8 +281,6 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
-
-
         .verified-badge {
             position: absolute;
             top: 15px;
@@ -304,8 +302,6 @@
                 margin: 10px;
                 max-width: none;
             }
-            
-
             
             .worker-name {
                 font-size: 28px;
@@ -358,8 +354,6 @@
         <div class="particle"></div>
     </div>
 
-
-
     <!-- Tarjeta del trabajador -->
     <div class="card-container">
         <!-- Badge de verificado -->
@@ -393,39 +387,39 @@
             </div>
         </div>
 
-        <!-- Nombre del trabajador -->
+        <!-- Nombre del trabajador - CORREGIDO -->
         <div class="worker-name">
-            {{ persona[1] }} {{ persona[2] }}
+            {{ persona.nombres }} {{ persona.apellidos }}
         </div>
 
-        <!-- Badge del cargo -->
+        <!-- Badge del cargo - CORREGIDO -->
         <div style="text-align: center;">
             <div class="cargo-badge">
                 <span class="cargo-label">Cargo:</span>
-                {{ persona[5] }}
+                {{ persona.cargo }}
             </div>
         </div>
 
-        <!-- Información del trabajador -->
+        <!-- Información del trabajador - CORREGIDO -->
         <div class="info-section">
             <div class="info-item">
                 <div class="info-label">Nombres:</div>
-                <div class="info-value">{{ persona[1] }}</div>
+                <div class="info-value">{{ persona.nombres }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">Apellidos:</div>
-                <div class="info-value">{{ persona[2] }}</div>
+                <div class="info-value">{{ persona.apellidos }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">N° Cédula:</div>
-                <div class="info-value">{{ persona[3] }}</div>
+                <div class="info-value">{{ persona.cedula }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">F/ Emisión:</div>
-                <div class="info-value">{{ persona[4] }}</div>
+                <div class="info-value">{{ persona.fecha_emision }}</div>
             </div>
         </div>
 

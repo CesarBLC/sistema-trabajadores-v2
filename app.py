@@ -53,8 +53,15 @@ def consultar_trabajador():
     conn.close()
     
     if persona:
-        # Convertir Row a dict para el template
-        persona_dict = dict(persona)
+        # CORREGIDO: Convertir Row a dict para el template
+        persona_dict = {
+            'id': persona[0],
+            'nombres': persona[1], 
+            'apellidos': persona[2],
+            'cedula': persona[3],
+            'fecha_emision': persona[4],
+            'cargo': persona[5]
+        }
         return render_template('perfil_trabajador.html', persona=persona_dict)
     else:
         flash('No se encontró ningún trabajador con esa cédula', 'error')
@@ -223,7 +230,15 @@ def admin_ver_perfil(persona_id):
     conn.close()
     
     if persona:
-        persona_dict = dict(persona)
+        # CORREGIDO: Convertir Row a dict para el template
+        persona_dict = {
+            'id': persona[0],
+            'nombres': persona[1], 
+            'apellidos': persona[2],
+            'cedula': persona[3],
+            'fecha_emision': persona[4],
+            'cargo': persona[5]
+        }
         return render_template('perfil_trabajador.html', persona=persona_dict)
     else:
         flash('Trabajador no encontrado', 'error')
@@ -238,7 +253,15 @@ def ver_perfil_publico(cedula):
     conn.close()
     
     if persona:
-        persona_dict = dict(persona)
+        # CORREGIDO: Convertir Row a dict para el template
+        persona_dict = {
+            'id': persona[0],
+            'nombres': persona[1], 
+            'apellidos': persona[2],
+            'cedula': persona[3],
+            'fecha_emision': persona[4],
+            'cargo': persona[5]
+        }
         return render_template('perfil_trabajador.html', persona=persona_dict)
     else:
         return render_template('error.html', mensaje="Trabajador no encontrado"), 404
