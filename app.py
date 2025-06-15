@@ -148,10 +148,7 @@ def agregar_persona():
             flash('Todos los campos son obligatorios', 'error')
             return render_template('agregar_persona.html')
 
-        # Validar que la cédula solo contenga números
-        if not cedula.isdigit():
-            flash('La cédula debe contener solo números', 'error')
-            return render_template('agregar_persona.html')
+
 
         # Debug: mostrar lo que se va a guardar
         print(f"💾 Guardando cédula: '{cedula}' (longitud: {len(cedula)})")
