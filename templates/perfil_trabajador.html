@@ -389,14 +389,14 @@
 
         <!-- Nombre del trabajador - CORREGIDO -->
         <div class="worker-name">
-            {{ persona.nombres }} {{ persona.apellidos }}
+            {{ persona[1] }} {{ persona[2] }}
         </div>
 
         <!-- Badge del cargo - CORREGIDO -->
         <div style="text-align: center;">
             <div class="cargo-badge">
                 <span class="cargo-label">Cargo:</span>
-                {{ persona.cargo }}
+                {{ persona[5] }}
             </div>
         </div>
 
@@ -404,22 +404,22 @@
         <div class="info-section">
             <div class="info-item">
                 <div class="info-label">Nombres:</div>
-                <div class="info-value">{{ persona.nombres }}</div>
+                <div class="info-value">{{ persona[1] }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">Apellidos:</div>
-                <div class="info-value">{{ persona.apellidos }}</div>
+                <div class="info-value">{{ persona[2] }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">N° Cédula:</div>
-                <div class="info-value">{{ persona.cedula }}</div>
+                <div class="info-value">{{ persona[3] }}</div>
             </div>
             
             <div class="info-item">
                 <div class="info-label">F/ Emisión:</div>
-                <div class="info-value">{{ persona.fecha_emision }}</div>
+                <div class="info-value">{{ persona.[4] }}</div>
             </div>
         </div>
 
