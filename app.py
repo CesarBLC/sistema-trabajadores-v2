@@ -3,6 +3,7 @@ import qrcode
 import sqlite3
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2 import pool
 import uuid
 import os
 from io import BytesIO
@@ -33,6 +34,8 @@ def init_connection_pool():
             print("✅ Pool de conexiones PostgreSQL creado")
         except Exception as e:
             print(f"❌ Error creando pool de conexiones: {e}")
+            # Si falla el pool, seguir sin él
+            connection_pool = None
 
 
 def get_db_connection():
@@ -58,18 +61,16 @@ def return_db_connection(conn):
 
 def init_db():
     print("🚀 Inicializando base de datos...")
+    
+    # FORZAR creación de tabla antes que nada
     if DATABASE_URL:
-        print("🐘 Usando PostgreSQL")
-        init_connection_pool()
-    else:
-        print("🗄️ Usando SQLite (desarrollo local)")
-    
-    conn = get_db_connection()
-    
-    try:
-        if DATABASE_URL:
-            # PostgreSQL - CORREGIDO: usar tipos correctos
+        print("🐘 Usando PostgreSQL - Creando tabla...")
+        try:
+            # Conexión directa sin pool primero
+            conn = psycopg2.connect(DATABASE_URL)
             cursor = conn.cursor()
+            
+            # Crear tabla personas
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS personas (
                     id VARCHAR(36) PRIMARY KEY,
@@ -80,50 +81,61 @@ def init_db():
                     cargo VARCHAR(100) NOT NULL
                 )
             ''')
-            # Crear índice para búsquedas rápidas por cédula
+            
+            # Crear índice
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_personas_cedula 
                 ON personas(cedula)
             ''')
+            
             conn.commit()
             cursor.close()
-            print("✅ Tabla PostgreSQL creada/verificada")
-        else:
-            # SQLite
-            cursor = conn.cursor()
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS personas (
-                    id TEXT PRIMARY KEY,
-                    nombres TEXT,
-                    apellidos TEXT,
-                    cedula TEXT,
-                    fecha_emision TEXT,
-                    cargo TEXT
-                )
-            ''')
-            conn.commit()
-            cursor.close()
-            print("✅ Tabla SQLite creada/verificada")
-        
-        # Verificar conexión
+            conn.close()
+            print("✅ Tabla PostgreSQL creada exitosamente")
+            
+            # Ahora sí inicializar el pool
+            init_connection_pool()
+            
+        except Exception as e:
+            print(f"❌ ERROR CRÍTICO creando tabla: {e}")
+            raise
+    else:
+        print("🗄️ Usando SQLite (desarrollo local)")
+        conn = sqlite3.connect('personas.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS personas (
+                id TEXT PRIMARY KEY,
+                nombres TEXT,
+                apellidos TEXT,
+                cedula TEXT,
+                fecha_emision TEXT,
+                cargo TEXT
+            )
+        ''')
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("✅ Tabla SQLite creada/verificada")
+    
+    # Verificar que funciona
+    try:
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM personas")
-        
-        if DATABASE_URL:
-            count = cursor.fetchone()[0]
-        else:
-            count = cursor.fetchone()[0]
+        count = cursor.fetchone()[0]
         cursor.close()
-        print(f"📊 Base de datos inicializada. Registros existentes: {count}")
         
-    except Exception as e:
-        print(f"❌ Error inicializando base de datos: {e}")
-        raise
-    finally:
         if DATABASE_URL:
             return_db_connection(conn)
         else:
             conn.close()
+            
+        print(f"📊 Base de datos verificada. Registros: {count}")
+        
+    except Exception as e:
+        print(f"❌ Error verificando base de datos: {e}")
+        raise
 
 # Función helper para conectar a la base de datos
 def execute_query(query, params=None, fetch=False):
