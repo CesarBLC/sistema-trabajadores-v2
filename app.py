@@ -68,16 +68,16 @@ def init_db():
     
     try:
         if DATABASE_URL:
-            # PostgreSQL
+            # PostgreSQL - CORREGIDO: usar tipos correctos
             cursor = conn.cursor()
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS personas (
-                    id TEXT PRIMARY KEY,
-                    nombres TEXT NOT NULL,
-                    apellidos TEXT NOT NULL,
-                    cedula TEXT NOT NULL UNIQUE,
-                    fecha_emision TEXT NOT NULL,
-                    cargo TEXT NOT NULL
+                    id VARCHAR(36) PRIMARY KEY,
+                    nombres VARCHAR(100) NOT NULL,
+                    apellidos VARCHAR(100) NOT NULL,
+                    cedula VARCHAR(20) NOT NULL UNIQUE,
+                    fecha_emision DATE NOT NULL,
+                    cargo VARCHAR(100) NOT NULL
                 )
             ''')
             # Crear índice para búsquedas rápidas por cédula
@@ -87,6 +87,7 @@ def init_db():
             ''')
             conn.commit()
             cursor.close()
+            print("✅ Tabla PostgreSQL creada/verificada")
         else:
             # SQLite
             cursor = conn.cursor()
@@ -102,15 +103,16 @@ def init_db():
             ''')
             conn.commit()
             cursor.close()
+            print("✅ Tabla SQLite creada/verificada")
         
         # Verificar conexión
         cursor = conn.cursor()
-        if DATABASE_URL:
-            cursor.execute("SELECT COUNT(*) FROM personas")
-        else:
-            cursor.execute("SELECT COUNT(*) FROM personas")
+        cursor.execute("SELECT COUNT(*) FROM personas")
         
-        count = cursor.fetchone()[0]
+        if DATABASE_URL:
+            count = cursor.fetchone()[0]
+        else:
+            count = cursor.fetchone()[0]
         cursor.close()
         print(f"📊 Base de datos inicializada. Registros existentes: {count}")
         
@@ -214,15 +216,20 @@ def consultar_trabajador():
         
         if persona:
             print("✅ Trabajador encontrado!")
-            # Convertir a dict
-            persona_dict = {
-                'id': persona[0],
-                'nombres': persona[1], 
-                'apellidos': persona[2],
-                'cedula': persona[3],
-                'fecha_emision': persona[4],
-                'cargo': persona[5]
-            }
+            # Convertir a dict - CORREGIDO para PostgreSQL
+            if DATABASE_URL:
+                # PostgreSQL devuelve RealDictRow (ya es como dict)
+                persona_dict = dict(persona)
+            else:
+                # SQLite Row - convertir a dict
+                persona_dict = {
+                    'id': persona[0],
+                    'nombres': persona[1], 
+                    'apellidos': persona[2],
+                    'cedula': persona[3],
+                    'fecha_emision': persona[4],
+                    'cargo': persona[5]
+                }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
             print("❌ Trabajador no encontrado")
@@ -417,84 +424,123 @@ def eliminar_persona(persona_id):
     
     return redirect(url_for('admin_dashboard'))
 
-# NUEVA RUTA: Ver perfil desde el panel admin
+# RUTAS CORREGIDAS para PostgreSQL
 @app.route('/admin/ver_perfil/<persona_id>')
 @login_required
 def admin_ver_perfil(persona_id):
-    conn = get_db_connection()
-    persona = conn.execute("SELECT * FROM personas WHERE id = ?", (persona_id,)).fetchone()
-    conn.close()
-    
-    if persona:
-        # CORREGIDO: Convertir Row a dict para el template
-        persona_dict = {
-            'id': persona[0],
-            'nombres': persona[1], 
-            'apellidos': persona[2],
-            'cedula': persona[3],
-            'fecha_emision': persona[4],
-            'cargo': persona[5]
-        }
-        return render_template('perfil_trabajador.html', persona=persona_dict)
-    else:
-        flash('Trabajador no encontrado', 'error')
+    try:
+        persona = execute_query_one(
+            "SELECT * FROM personas WHERE id = %s" if DATABASE_URL else "SELECT * FROM personas WHERE id = ?",
+            (persona_id,)
+        )
+        
+        if persona:
+            # Convertir a dict - CORREGIDO para PostgreSQL
+            if DATABASE_URL:
+                persona_dict = dict(persona)
+            else:
+                persona_dict = {
+                    'id': persona[0],
+                    'nombres': persona[1], 
+                    'apellidos': persona[2],
+                    'cedula': persona[3],
+                    'fecha_emision': persona[4],
+                    'cargo': persona[5]
+                }
+            return render_template('perfil_trabajador.html', persona=persona_dict)
+        else:
+            flash('Trabajador no encontrado', 'error')
+            return redirect(url_for('admin_dashboard'))
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
 
 # RUTAS PARA QR (CORREGIDAS)
 @app.route('/perfil/<cedula>')
 def ver_perfil_publico(cedula):
     """Ruta pública para ver perfil mediante QR"""
-    conn = get_db_connection()
-    persona = conn.execute("SELECT * FROM personas WHERE cedula = ?", (cedula,)).fetchone()
-    conn.close()
-    
-    if persona:
-        # CORREGIDO: Convertir Row a dict para el template
-        persona_dict = {
-            'id': persona[0],
-            'nombres': persona[1], 
-            'apellidos': persona[2],
-            'cedula': persona[3],
-            'fecha_emision': persona[4],
-            'cargo': persona[5]
-        }
-        return render_template('perfil_trabajador.html', persona=persona_dict)
-    else:
-        return render_template('error.html', mensaje="Trabajador no encontrado"), 404
+    try:
+        persona = execute_query_one(
+            "SELECT * FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT * FROM personas WHERE cedula = ?",
+            (cedula,)
+        )
+        
+        if persona:
+            # Convertir a dict - CORREGIDO para PostgreSQL
+            if DATABASE_URL:
+                persona_dict = dict(persona)
+            else:
+                persona_dict = {
+                    'id': persona[0],
+                    'nombres': persona[1], 
+                    'apellidos': persona[2],
+                    'cedula': persona[3],
+                    'fecha_emision': persona[4],
+                    'cargo': persona[5]
+                }
+            return render_template('perfil_trabajador.html', persona=persona_dict)
+        else:
+            return render_template('error.html', mensaje="Trabajador no encontrado"), 404
+    except Exception as e:
+        return render_template('error.html', mensaje=f"Error: {str(e)}"), 500
 
 @app.route('/persona/<persona_id>')
 def ver_persona(persona_id):
     """Ruta legacy - redirige a perfil por cédula"""
-    conn = get_db_connection()
-    persona = conn.execute("SELECT cedula FROM personas WHERE id = ?", (persona_id,)).fetchone()
-    conn.close()
-    
-    if persona:
-        return redirect(url_for('ver_perfil_publico', cedula=persona['cedula']))
-    else:
-        return render_template('error.html', mensaje="Trabajador no encontrado"), 404
+    try:
+        persona = execute_query_one(
+            "SELECT cedula FROM personas WHERE id = %s" if DATABASE_URL else "SELECT cedula FROM personas WHERE id = ?",
+            (persona_id,)
+        )
+        
+        if persona:
+            if DATABASE_URL:
+                cedula = persona['cedula']
+            else:
+                cedula = persona[0]
+            return redirect(url_for('ver_perfil_publico', cedula=cedula))
+        else:
+            return render_template('error.html', mensaje="Trabajador no encontrado"), 404
+    except Exception as e:
+        return render_template('error.html', mensaje=f"Error: {str(e)}"), 500
 
 @app.route('/pdf/<persona_id>')
 @login_required
 def generar_pdf(persona_id):
-    conn = get_db_connection()
-    persona = conn.execute("SELECT * FROM personas WHERE id = ?", (persona_id,)).fetchone()
-    conn.close()
+    try:
+        persona = execute_query_one(
+            "SELECT * FROM personas WHERE id = %s" if DATABASE_URL else "SELECT * FROM personas WHERE id = ?",
+            (persona_id,)
+        )
 
-    if not persona:
-        return "Persona no encontrada", 404
+        if not persona:
+            return "Persona no encontrada", 404
 
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer)
-    pdf.drawString(100, 750, f"Nombre: {persona['nombres']} {persona['apellidos']}")
-    pdf.drawString(100, 730, f"Cédula: {persona['cedula']}")
-    pdf.drawString(100, 710, f"Fecha de Emisión: {persona['fecha_emision']}")
-    pdf.drawString(100, 690, f"Cargo: {persona['cargo']}")
-    pdf.showPage()
-    pdf.save()
-    buffer.seek(0)
+        # Convertir a dict si es necesario
+        if DATABASE_URL:
+            p = dict(persona)
+        else:
+            p = {
+                'nombres': persona[1],
+                'apellidos': persona[2],
+                'cedula': persona[3],
+                'fecha_emision': persona[4],
+                'cargo': persona[5]
+            }
 
-    return send_file(buffer, as_attachment=True, download_name=f"{persona['nombres']}_{persona['apellidos']}.pdf", mimetype='application/pdf')
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer)
+        pdf.drawString(100, 750, f"Nombre: {p['nombres']} {p['apellidos']}")
+        pdf.drawString(100, 730, f"Cédula: {p['cedula']}")
+        pdf.drawString(100, 710, f"Fecha de Emisión: {p['fecha_emision']}")
+        pdf.drawString(100, 690, f"Cargo: {p['cargo']}")
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+
+        return send_file(buffer, as_attachment=True, download_name=f"{p['nombres']}_{p['apellidos']}.pdf", mimetype='application/pdf')
+    except Exception as e:
+        return f"Error generando PDF: {str(e)}", 500
 
 if __name__ == '__main__':
     # Inicializar la base de datos al arrancar
