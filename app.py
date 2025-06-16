@@ -1,6 +1,8 @@
 from flask import Flask, request, redirect, url_for, render_template, send_file, session, flash
 import qrcode
 import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import uuid
 import os
 from io import BytesIO
@@ -8,20 +10,71 @@ from reportlab.pdfgen import canvas
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta_aqui'  # Cambia esto por una clave segura
+app.secret_key = '10000'  # Cambia esto por una clave segura
 
 # Credenciales de administrador (cámbialas por las tuyas)
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin123"
 
-# Función para inicializar la base de datos
+# Configuración de base de datos
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+def get_db_connection():
+    if DATABASE_URL:
+        # Producción - PostgreSQL
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        return conn
+    else:
+        # Desarrollo local - SQLite
+        conn = sqlite3.connect('personas.db')
+        conn.row_factory = sqlite3.Row
+        return conn
+
 def init_db():
-    conn = sqlite3.connect('personas.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS personas
-                 (id TEXT PRIMARY KEY, nombres TEXT, apellidos TEXT, cedula TEXT, fecha_emision TEXT, cargo TEXT)''')
-    conn.commit()
-    conn.close()
+    print("🚀 Inicializando base de datos...")
+    if DATABASE_URL:
+        print("🐘 Usando PostgreSQL en producción")
+    else:
+        print("🗄️ Usando SQLite en desarrollo local")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if DATABASE_URL:
+            # PostgreSQL
+            cursor.execute(''' CREATE TABLE IF NOT EXISTS personas (
+                    id TEXT PRIMARY KEY,
+                    nombres TEXT NOT NULL,
+                    apellidos TEXT NOT NULL,
+                    cedula TEXT NOT NULL UNIQUE,
+                    fecha_emision TEXT NOT NULL,
+                    cargo TEXT NOT NULL
+                ) ''')
+            # Crear índice para búsquedas rápidas por cédula
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_personas_cedula 
+                ON personas(cedula)
+            ''')
+        else:
+            # SQLite (desarrollo local)
+            cursor.execute('''CREATE TABLE IF NOT EXISTS personas
+                             (id TEXT PRIMARY KEY, nombres TEXT, apellidos TEXT, 
+                              cedula TEXT, fecha_emision TEXT, cargo TEXT)''')
+        
+        conn.commit()
+        
+        # Verificar que funciona
+        cursor.execute("SELECT COUNT(*) FROM personas")
+        count = cursor.fetchone()[0]
+        print(f"✅ Base de datos inicializada. Registros existentes: {count}")
+        
+    except Exception as e:
+        print(f"❌ Error inicializando base de datos: {e}")
+        raise
+    finally:
+        cursor.close()
+        conn.close()
 
 # Función helper para conectar a la base de datos
 def get_db_connection():
@@ -48,36 +101,17 @@ def inicio():
 def consultar_trabajador():
     cedula = request.form['cedula'].strip()
     
-    # Debug: imprimir lo que se está buscando
-    print(f"🔍 Buscando cédula: '{cedula}' (longitud: {len(cedula)})")
+    print(f"🔍 Buscando cédula: '{cedula}'")
     
     try:
-        conn = get_db_connection()
-        
-        # Primero, verificar cuántos registros hay en total
-        total_registros = conn.execute("SELECT COUNT(*) FROM personas").fetchone()[0]
-        print(f"📊 Total de registros en BD: {total_registros}")
-        
-        # Búsqueda exacta
-        persona = conn.execute("SELECT * FROM personas WHERE cedula = ?", (cedula,)).fetchone()
-        
-        if not persona:
-            # Búsqueda alternativa quitando espacios de ambos lados
-            print("❌ No encontrado con búsqueda exacta, probando búsqueda con TRIM...")
-            persona = conn.execute("SELECT * FROM personas WHERE TRIM(cedula) = ?", (cedula,)).fetchone()
-            
-            if not persona:
-                # Mostrar todas las cédulas para debug
-                print("🔍 Mostrando todas las cédulas en la BD para debug:")
-                todas_cedulas = conn.execute("SELECT cedula FROM personas").fetchall()
-                for i, (c,) in enumerate(todas_cedulas, 1):
-                    print(f"  {i}. '{c}' (longitud: {len(c)})")
-        
-        conn.close()
+        persona = execute_query_one(
+            "SELECT * FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT * FROM personas WHERE cedula = ?",
+            (cedula,)
+        )
         
         if persona:
             print("✅ Trabajador encontrado!")
-            # Convertir Row a dict para el template
+            # Convertir a dict
             persona_dict = {
                 'id': persona[0],
                 'nombres': persona[1], 
@@ -88,18 +122,15 @@ def consultar_trabajador():
             }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
-            print("❌ Trabajador no encontrado después de todas las búsquedas")
+            print("❌ Trabajador no encontrado")
             flash('No se encontró ningún trabajador con esa cédula', 'error')
             return redirect(url_for('inicio'))
             
-    except sqlite3.Error as e:
-        print(f"❌ Error de base de datos: {e}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
         flash('Error al consultar la base de datos', 'error')
         return redirect(url_for('inicio'))
-    except Exception as e:
-        print(f"❌ Error general: {e}")
-        flash('Error interno del servidor', 'error')
-        return redirect(url_for('inicio'))
+
 
 # RUTAS DE AUTENTICACIÓN
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -127,10 +158,16 @@ def admin_logout():
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
-    conn = get_db_connection()
-    personas = conn.execute("SELECT * FROM personas ORDER BY apellidos, nombres").fetchall()
-    conn.close()
-    return render_template('admin_dashboard.html', personas=personas)
+    try:
+        personas = execute_query(
+            "SELECT * FROM personas ORDER BY apellidos, nombres",
+            fetch=True
+        )
+        return render_template('admin_dashboard.html', personas=personas)
+    except Exception as e:
+        print(f"❌ Error cargando dashboard: {e}")
+        flash('Error cargando los datos', 'error')
+        return render_template('admin_dashboard.html', personas=[])
 
 @app.route('/admin/agregar', methods=['GET', 'POST'])
 @login_required
@@ -139,7 +176,7 @@ def agregar_persona():
     if request.method == 'POST':
         nombres = request.form['nombres'].strip()
         apellidos = request.form['apellidos'].strip()
-        cedula = request.form['cedula'].strip()  # Esto ya está bien
+        cedula = request.form['cedula'].strip()
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
 
@@ -148,36 +185,35 @@ def agregar_persona():
             flash('Todos los campos son obligatorios', 'error')
             return render_template('agregar_persona.html')
 
-
-
-        # Debug: mostrar lo que se va a guardar
-        print(f"💾 Guardando cédula: '{cedula}' (longitud: {len(cedula)})")
-
-        # Verificar si ya existe la cédula
-        conn = get_db_connection()
-        existing = conn.execute("SELECT id FROM personas WHERE cedula = ?", (cedula,)).fetchone()
-        
-        if existing:
-            flash('Ya existe un trabajador con esa cédula', 'error')
-            conn.close()
-            return render_template('agregar_persona.html')
-
-        # Generar ID único
-        persona_id = str(uuid.uuid4())
+        print(f"💾 Guardando cédula: '{cedula}'")
 
         try:
+            # Verificar si ya existe la cédula
+            existing = execute_query_one(
+                "SELECT id FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT id FROM personas WHERE cedula = ?",
+                (cedula,)
+            )
+            
+            if existing:
+                flash('Ya existe un trabajador con esa cédula', 'error')
+                return render_template('agregar_persona.html')
+
+            # Generar ID único
+            persona_id = str(uuid.uuid4())
+
             # Insertar en la base de datos
-            conn.execute("INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo) VALUES (?, ?, ?, ?, ?, ?)",
-                        (persona_id, nombres, apellidos, cedula, fecha_emision, cargo))
-            conn.commit()
+            affected = execute_query(
+                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo) 
+                   VALUES (%s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
+                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo) 
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo)
+            )
             
-            # Verificar que se guardó correctamente
-            verificacion = conn.execute("SELECT * FROM personas WHERE id = ?", (persona_id,)).fetchone()
-            
-            if verificacion:
-                print(f"✅ Trabajador guardado exitosamente con cédula: '{verificacion[3]}'")
+            if affected > 0:
+                print(f"✅ Trabajador guardado exitosamente")
                 
-                # Generar QR que apunte al perfil público
+                # Generar QR
                 qr_data = url_for('ver_perfil_publico', cedula=cedula, _external=True)
                 qr = qrcode.QRCode(version=1, box_size=10, border=5)
                 qr.add_data(qr_data)
@@ -193,27 +229,22 @@ def agregar_persona():
                 qr_url = '/' + qr_path
                 
                 flash('Trabajador agregado exitosamente', 'success')
-                conn.close()
                 return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id)
             else:
                 flash('Error al guardar el trabajador. Intente nuevamente.', 'error')
-                conn.close()
                 return render_template('agregar_persona.html')
                 
-        except sqlite3.Error as e:
-            print(f"❌ Error al insertar en BD: {e}")
+        except Exception as e:
+            print(f"❌ Error al insertar: {e}")
             flash(f'Error en la base de datos: {str(e)}', 'error')
-            conn.rollback()
-            conn.close()
             return render_template('agregar_persona.html')
 
     return render_template('agregar_persona.html')
 
+
 @app.route('/admin/editar/<persona_id>', methods=['GET', 'POST'])
 @login_required
 def editar_persona(persona_id):
-    conn = get_db_connection()
-    
     if request.method == 'POST':
         nombres = request.form['nombres'].strip()
         apellidos = request.form['apellidos'].strip()
@@ -222,44 +253,64 @@ def editar_persona(persona_id):
         cargo = request.form['cargo'].strip()
         
         try:
-            conn.execute("UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=? WHERE id=?",
-                        (nombres, apellidos, cedula, fecha_emision, cargo, persona_id))
-            conn.commit()
-            conn.close()
-            flash('Datos actualizados correctamente', 'success')
+            affected = execute_query(
+                """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s 
+                   WHERE id=%s""" if DATABASE_URL else
+                """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=? 
+                   WHERE id=?""",
+                (nombres, apellidos, cedula, fecha_emision, cargo, persona_id)
+            )
+            
+            if affected > 0:
+                flash('Datos actualizados correctamente', 'success')
+            else:
+                flash('No se encontró el trabajador para actualizar', 'error')
+            
             return redirect(url_for('admin_dashboard'))
-        except sqlite3.Error as e:
+            
+        except Exception as e:
             flash(f'Error al actualizar: {str(e)}', 'error')
-            conn.close()
             return redirect(url_for('admin_dashboard'))
     else:
-        persona = conn.execute("SELECT * FROM personas WHERE id = ?", (persona_id,)).fetchone()
-        conn.close()
-        if persona:
-            return render_template('editar_persona.html', p=persona)
-        else:
-            flash('Trabajador no encontrado', 'error')
+        try:
+            persona = execute_query_one(
+                "SELECT * FROM personas WHERE id = %s" if DATABASE_URL else "SELECT * FROM personas WHERE id = ?",
+                (persona_id,)
+            )
+            
+            if persona:
+                return render_template('editar_persona.html', p=persona)
+            else:
+                flash('Trabajador no encontrado', 'error')
+                return redirect(url_for('admin_dashboard'))
+                
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
             return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/admin/eliminar/<persona_id>')
 @login_required
 def eliminar_persona(persona_id):
-    conn = get_db_connection()
     try:
-        conn.execute("DELETE FROM personas WHERE id = ?", (persona_id,))
-        conn.commit()
-        conn.close()
+        affected = execute_query(
+            "DELETE FROM personas WHERE id = %s" if DATABASE_URL else "DELETE FROM personas WHERE id = ?",
+            (persona_id,)
+        )
         
-        # Eliminar archivo QR
-        try:
-            os.remove(f'static/{persona_id}.png')
-        except FileNotFoundError:
-            pass
-        
-        flash('Trabajador eliminado correctamente', 'success')
-    except sqlite3.Error as e:
+        if affected > 0:
+            # Eliminar archivo QR
+            try:
+                os.remove(f'static/{persona_id}.png')
+            except FileNotFoundError:
+                pass
+            
+            flash('Trabajador eliminado correctamente', 'success')
+        else:
+            flash('No se encontró el trabajador para eliminar', 'error')
+            
+    except Exception as e:
         flash(f'Error al eliminar: {str(e)}', 'error')
-        conn.close()
     
     return redirect(url_for('admin_dashboard'))
 
@@ -345,4 +396,5 @@ def generar_pdf(persona_id):
 if __name__ == '__main__':
     # Inicializar la base de datos al arrancar
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
