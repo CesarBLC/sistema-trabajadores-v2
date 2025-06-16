@@ -265,13 +265,28 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     try:
+        print("🔍 Cargando dashboard...")
         personas = execute_query(
             "SELECT * FROM personas ORDER BY apellidos, nombres",
             fetch=True
         )
+        
+        print(f"📊 Personas encontradas: {len(personas)}")
+        
+        # Debug: mostrar los datos
+        for i, persona in enumerate(personas):
+            if DATABASE_URL:
+                p_dict = dict(persona)
+            else:
+                p_dict = dict(persona)
+            print(f"  👤 {i+1}. ID: {p_dict.get('id', 'SIN_ID')}, Nombre: {p_dict.get('nombres', 'SIN_NOMBRE')}, Cédula: {p_dict.get('cedula', 'SIN_CEDULA')}")
+        
         return render_template('admin_dashboard.html', personas=personas)
+        
     except Exception as e:
         print(f"❌ Error cargando dashboard: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
         flash('Error cargando los datos', 'error')
         return render_template('admin_dashboard.html', personas=[])
 
