@@ -42,7 +42,10 @@ def get_db_connection():
     if DATABASE_URL:
         # Producción - PostgreSQL
         if connection_pool:
-            return connection_pool.getconn()
+            conn = connection_pool.getconn()
+            # IMPORTANTE: Configurar cursor factory en la conexión
+            conn.cursor_factory = RealDictCursor
+            return conn
         else:
             return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     else:
@@ -50,7 +53,6 @@ def get_db_connection():
         conn = sqlite3.connect('personas.db')
         conn.row_factory = sqlite3.Row
         return conn
-
 
 def return_db_connection(conn):
     """Devuelve la conexión al pool (solo para PostgreSQL)"""
@@ -139,9 +141,14 @@ def execute_query(query, params=None, fetch=False):
 def execute_query_one(query, params=None):
     """Ejecuta una query y devuelve solo un resultado"""
     conn = get_db_connection()
+    cursor = None
     
     try:
-        cursor = conn.cursor()
+        # Para PostgreSQL usar RealDictCursor
+        if DATABASE_URL:
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+        else:
+            cursor = conn.cursor()
         
         if params:
             cursor.execute(query, params)
@@ -149,17 +156,39 @@ def execute_query_one(query, params=None):
             cursor.execute(query)
         
         result = cursor.fetchone()
-        cursor.close()
         return result
         
     except Exception as e:
         print(f"❌ Error ejecutando query: {e}")
+        print(f"❌ Query: {query}")
+        print(f"❌ Params: {params}")
         raise
     finally:
-        if DATABASE_URL:
-            return_db_connection(conn)
-        else:
-            conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            if DATABASE_URL and connection_pool:
+                return_db_connection(conn)
+            else:
+                conn.close()
+
+# FUNCIÓN PARA DEPURAR - Agregar temporalmente
+def debug_database():
+    """Función para verificar qué hay en la base de datos"""
+    try:
+        # Contar registros
+        count = execute_query_one("SELECT COUNT(*) as total FROM personas")
+        print(f"🔢 Total registros en DB: {count}")
+        
+        # Mostrar todos los registros
+        personas = execute_query("SELECT * FROM personas", fetch=True)
+        print(f"📋 Registros encontrados: {len(personas)}")
+        
+        for i, persona in enumerate(personas):
+            print(f"  {i+1}. {dict(persona) if DATABASE_URL else dict(persona)}")
+            
+    except Exception as e:
+        print(f"❌ Error en debug: {e}")
 
 # Decorator para rutas protegidas
 def login_required(f):
@@ -182,28 +211,22 @@ def consultar_trabajador():
     
     print(f"🔍 Buscando cédula: '{cedula}'")
     
+    # DEBUG: Verificar qué hay en la base de datos
+    debug_database()
+    
     try:
         persona = execute_query_one(
             "SELECT * FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT * FROM personas WHERE cedula = ?",
             (cedula,)
         )
         
+        print(f"🔍 Resultado de búsqueda: {persona}")
+        
         if persona:
             print("✅ Trabajador encontrado!")
-            # Convertir a dict - CORREGIDO para PostgreSQL
-            if DATABASE_URL:
-                # PostgreSQL devuelve RealDictRow (ya es como dict)
-                persona_dict = dict(persona)
-            else:
-                # SQLite Row - convertir a dict
-                persona_dict = {
-                    'id': persona[0],
-                    'nombres': persona[1], 
-                    'apellidos': persona[2],
-                    'cedula': persona[3],
-                    'fecha_emision': persona[4],
-                    'cargo': persona[5]
-                }
+            # Con RealDictCursor, persona ya es un dict-like object
+            persona_dict = dict(persona)
+            print(f"📋 Datos del trabajador: {persona_dict}")
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
             print("❌ Trabajador no encontrado")
@@ -214,7 +237,6 @@ def consultar_trabajador():
         print(f"❌ Error: {e}")
         flash('Error al consultar la base de datos', 'error')
         return redirect(url_for('inicio'))
-
 
 # RUTAS DE AUTENTICACIÓN
 @app.route('/admin/login', methods=['GET', 'POST'])
