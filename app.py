@@ -59,83 +59,45 @@ def return_db_connection(conn):
     else:
         conn.close()
 
-def init_db():
-    print("🚀 Inicializando base de datos...")
-    
-    # FORZAR creación de tabla antes que nada
-    if DATABASE_URL:
-        print("🐘 Usando PostgreSQL - Creando tabla...")
-        try:
-            # Conexión directa sin pool primero
-            conn = psycopg2.connect(DATABASE_URL)
-            cursor = conn.cursor()
-            
-            # Crear tabla personas
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS personas (
-                    id VARCHAR(36) PRIMARY KEY,
-                    nombres VARCHAR(100) NOT NULL,
-                    apellidos VARCHAR(100) NOT NULL,
-                    cedula VARCHAR(20) NOT NULL UNIQUE,
-                    fecha_emision DATE NOT NULL,
-                    cargo VARCHAR(100) NOT NULL
-                )
-            ''')
-            
-            # Crear índice
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_personas_cedula 
-                ON personas(cedula)
-            ''')
-            
-            conn.commit()
-            cursor.close()
-            conn.close()
-            print("✅ Tabla PostgreSQL creada exitosamente")
-            
-            # Ahora sí inicializar el pool
-            init_connection_pool()
-            
-        except Exception as e:
-            print(f"❌ ERROR CRÍTICO creando tabla: {e}")
-            raise
-    else:
-        print("🗄️ Usando SQLite (desarrollo local)")
-        conn = sqlite3.connect('personas.db')
+def crear_tabla_si_no_existe():
+    """Crear tabla personas directamente - SIMPLIFICADO"""
+    if not DATABASE_URL:
+        return  # Solo para PostgreSQL
+        
+    print("🔧 CREANDO TABLA PERSONAS...")
+    try:
+        # Conexión directa a PostgreSQL
+        conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS personas (
-                id TEXT PRIMARY KEY,
-                nombres TEXT,
-                apellidos TEXT,
-                cedula TEXT,
-                fecha_emision TEXT,
-                cargo TEXT
-            )
-        ''')
+        
+        # Crear tabla
+        create_sql = """
+        CREATE TABLE IF NOT EXISTS personas (
+            id VARCHAR(36) PRIMARY KEY,
+            nombres VARCHAR(100) NOT NULL,
+            apellidos VARCHAR(100) NOT NULL,
+            cedula VARCHAR(20) NOT NULL UNIQUE,
+            fecha_emision DATE NOT NULL,
+            cargo VARCHAR(100) NOT NULL
+        )
+        """
+        
+        cursor.execute(create_sql)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_personas_cedula ON personas(cedula)")
+        
         conn.commit()
         cursor.close()
         conn.close()
-        print("✅ Tabla SQLite creada/verificada")
-    
-    # Verificar que funciona
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM personas")
-        count = cursor.fetchone()[0]
-        cursor.close()
         
-        if DATABASE_URL:
-            return_db_connection(conn)
-        else:
-            conn.close()
-            
-        print(f"📊 Base de datos verificada. Registros: {count}")
+        print("✅ Tabla 'personas' creada exitosamente")
         
     except Exception as e:
-        print(f"❌ Error verificando base de datos: {e}")
+        print(f"❌ ERROR CREANDO TABLA: {e}")
         raise
+
+# EJECUTAR INMEDIATAMENTE al importar
+if DATABASE_URL:
+    crear_tabla_si_no_existe()
 
 # Función helper para conectar a la base de datos
 def execute_query(query, params=None, fetch=False):
@@ -555,7 +517,9 @@ def generar_pdf(persona_id):
         return f"Error generando PDF: {str(e)}", 500
 
 if __name__ == '__main__':
-    # Inicializar la base de datos al arrancar
-    init_db()
+    # Inicializar pool de conexiones
+    if DATABASE_URL:
+        init_connection_pool()
+        
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
