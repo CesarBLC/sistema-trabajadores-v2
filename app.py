@@ -19,68 +19,171 @@ ADMIN_PASS = "admin123"
 # Configuración de base de datos
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+# Pool de conexiones para PostgreSQL (mejor rendimiento)
+connection_pool = None
+
+def init_connection_pool():
+    global connection_pool
+    if DATABASE_URL and not connection_pool:
+        try:
+            connection_pool = psycopg2.pool.SimpleConnectionPool(
+                1, 20,  # min y max conexiones
+                DATABASE_URL
+            )
+            print("✅ Pool de conexiones PostgreSQL creado")
+        except Exception as e:
+            print(f"❌ Error creando pool de conexiones: {e}")
+
+
 def get_db_connection():
     if DATABASE_URL:
         # Producción - PostgreSQL
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        return conn
+        if connection_pool:
+            return connection_pool.getconn()
+        else:
+            return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     else:
         # Desarrollo local - SQLite
         conn = sqlite3.connect('personas.db')
         conn.row_factory = sqlite3.Row
         return conn
 
+
+def return_db_connection(conn):
+    """Devuelve la conexión al pool (solo para PostgreSQL)"""
+    if DATABASE_URL and connection_pool:
+        connection_pool.putconn(conn)
+    else:
+        conn.close()
+
 def init_db():
     print("🚀 Inicializando base de datos...")
     if DATABASE_URL:
-        print("🐘 Usando PostgreSQL en producción")
+        print("🐘 Usando PostgreSQL")
+        init_connection_pool()
     else:
-        print("🗄️ Usando SQLite en desarrollo local")
+        print("🗄️ Usando SQLite (desarrollo local)")
     
     conn = get_db_connection()
-    cursor = conn.cursor()
     
     try:
         if DATABASE_URL:
             # PostgreSQL
-            cursor.execute(''' CREATE TABLE IF NOT EXISTS personas (
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS personas (
                     id TEXT PRIMARY KEY,
                     nombres TEXT NOT NULL,
                     apellidos TEXT NOT NULL,
                     cedula TEXT NOT NULL UNIQUE,
                     fecha_emision TEXT NOT NULL,
                     cargo TEXT NOT NULL
-                ) ''')
+                )
+            ''')
             # Crear índice para búsquedas rápidas por cédula
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_personas_cedula 
                 ON personas(cedula)
             ''')
+            conn.commit()
+            cursor.close()
         else:
-            # SQLite (desarrollo local)
-            cursor.execute('''CREATE TABLE IF NOT EXISTS personas
-                             (id TEXT PRIMARY KEY, nombres TEXT, apellidos TEXT, 
-                              cedula TEXT, fecha_emision TEXT, cargo TEXT)''')
+            # SQLite
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS personas (
+                    id TEXT PRIMARY KEY,
+                    nombres TEXT,
+                    apellidos TEXT,
+                    cedula TEXT,
+                    fecha_emision TEXT,
+                    cargo TEXT
+                )
+            ''')
+            conn.commit()
+            cursor.close()
         
-        conn.commit()
+        # Verificar conexión
+        cursor = conn.cursor()
+        if DATABASE_URL:
+            cursor.execute("SELECT COUNT(*) FROM personas")
+        else:
+            cursor.execute("SELECT COUNT(*) FROM personas")
         
-        # Verificar que funciona
-        cursor.execute("SELECT COUNT(*) FROM personas")
         count = cursor.fetchone()[0]
-        print(f"✅ Base de datos inicializada. Registros existentes: {count}")
+        cursor.close()
+        print(f"📊 Base de datos inicializada. Registros existentes: {count}")
         
     except Exception as e:
         print(f"❌ Error inicializando base de datos: {e}")
         raise
     finally:
-        cursor.close()
-        conn.close()
+        if DATABASE_URL:
+            return_db_connection(conn)
+        else:
+            conn.close()
 
 # Función helper para conectar a la base de datos
-def get_db_connection():
-    conn = sqlite3.connect('personas.db')
-    conn.row_factory = sqlite3.Row  # Para acceder por nombre de columna
-    return conn
+def execute_query(query, params=None, fetch=False):
+    """
+    Ejecuta una query de forma segura
+    fetch: True para SELECT, False para INSERT/UPDATE/DELETE
+    """
+    conn = get_db_connection()
+    
+    try:
+        cursor = conn.cursor()
+        
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        if fetch:
+            result = cursor.fetchall()
+            cursor.close()
+            return result
+        else:
+            conn.commit()
+            affected_rows = cursor.rowcount
+            cursor.close()
+            return affected_rows
+            
+    except Exception as e:
+        print(f"❌ Error ejecutando query: {e}")
+        if not fetch:
+            conn.rollback()
+        raise
+    finally:
+        if DATABASE_URL:
+            return_db_connection(conn)
+        else:
+            conn.close()
+
+def execute_query_one(query, params=None):
+    """Ejecuta una query y devuelve solo un resultado"""
+    conn = get_db_connection()
+    
+    try:
+        cursor = conn.cursor()
+        
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        result = cursor.fetchone()
+        cursor.close()
+        return result
+        
+    except Exception as e:
+        print(f"❌ Error ejecutando query: {e}")
+        raise
+    finally:
+        if DATABASE_URL:
+            return_db_connection(conn)
+        else:
+            conn.close()
 
 # Decorator para rutas protegidas
 def login_required(f):
