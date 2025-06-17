@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -21,22 +21,46 @@
             padding: 20px;
         }
 
+        /* Barra superior con colores de Venezuela */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #FFDD00 33.33%, #003DA5 33.33%, #003DA5 66.66%, #CF142B 66.66%);
+            z-index: 1000;
+        }
+
         .container {
             background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 50px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
             max-width: 500px;
             width: 100%;
+            border: 1px solid #e9ecef;
+        }
+
+        .membrete {
+            font-size: 11px;
+            color: #6c757d;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            margin: 0 auto 20px;
+            width: 70px;
+            height: 70px;
+            background: #003DA5;
+            border-radius: 12px;
+            margin: 0 auto 25px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -46,68 +70,71 @@
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            color: #003DA5;
+            margin-bottom: 12px;
             font-size: 28px;
+            font-weight: 600;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: #6c757d;
+            margin-bottom: 35px;
             font-size: 16px;
+            line-height: 1.4;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: left;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: #495057;
             font-weight: 500;
+            font-size: 15px;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
+            padding: 16px;
+            border: 2px solid #e9ecef;
             border-radius: 8px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.2s ease;
+            background: white;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #003DA5;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #003DA5;
             color: white;
-            padding: 15px 30px;
+            padding: 16px 32px;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
             width: 100%;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: background-color 0.2s ease;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            background: #002a7a;
         }
 
         .btn:active {
-            transform: translateY(0);
+            background: #001f5c;
         }
 
         .divider {
-            margin: 30px 0;
-            border-top: 1px solid #e0e0e0;
+            margin: 35px 0;
+            border-top: 1px solid #e9ecef;
             position: relative;
         }
 
@@ -119,58 +146,105 @@
             transform: translateX(-50%);
             background: white;
             padding: 0 15px;
-            color: #999;
+            color: #adb5bd;
+            font-size: 14px;
         }
 
         .admin-link {
-            color: #666;
+            color: #6c757d;
             font-size: 14px;
         }
 
         .admin-link a {
-            color: #667eea;
+            color: #CF142B;
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: color 0.2s ease;
         }
 
         .admin-link a:hover {
-            color: #764ba2;
+            color: #a10e22;
             text-decoration: underline;
         }
 
         .alert {
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-weight: 500;
+            border-left: 4px solid;
         }
 
         .alert-error {
-            background-color: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #CF142B;
         }
 
         .alert-success {
-            background-color: #efe;
-            color: #363;
-            border: 1px solid #cfc;
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
         }
+
+        /* Acento sutil con colores de Venezuela */
+        .venezuela-accent {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-yellow { background: #FFDD00; }
+        .dot-blue { background: #003DA5; }
+        .dot-red { background: #CF142B; }
 
         @media (max-width: 600px) {
             .container {
-                padding: 30px 20px;
+                padding: 40px 25px;
+                margin: 10px;
             }
             
             h1 {
                 font-size: 24px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+
+            .venezuela-accent {
+                top: 15px;
+                right: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Acento minimalista con colores de Venezuela -->
+        <div class="venezuela-accent">
+            <div class="color-dot dot-yellow"></div>
+            <div class="color-dot dot-blue"></div>
+            <div class="color-dot dot-red"></div>
+        </div>
+
+        <div class="membrete">
+            Unión Bolivariana de Trabajadores de la<br>
+            Industria de la Construcción, Cemento, Madera<br>
+            Maquinarias Pesadas, Vialidades y Similares de<br>
+            la República Bolivariana de Venezuela
+        </div>
+
         <div class="logo">ID</div>
         <h1>Verificación de Trabajadores</h1>
         <p class="subtitle">Ingresa tu número de cédula para verificar tu información</p>
@@ -192,7 +266,7 @@
                 <input type="text" 
                        id="cedula" 
                        name="cedula" 
-                       placeholder="Ej:V-12345678" 
+                       placeholder="Ejemplo: 12345678" 
                        required 
                        pattern="[0-9]+"
                        title="Solo se permiten números">
