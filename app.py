@@ -208,18 +208,23 @@ def inicio():
 @app.route('/consultar', methods=['POST'])
 def consultar_trabajador():
     cedula = request.form['cedula'].strip()
+
+      # 🔧 NUEVA LÍNEA: Extraer solo números de la cédula ingresada
+    numeros_cedula = ''.join(filter(str.isdigit, cedula))
     
+
     print(f"🔍 Buscando cédula: '{cedula}'")
     
     # DEBUG: Verificar qué hay en la base de datos
     debug_database()
     
     try:
+        # 🔧 NUEVA CONSULTA: Usar REGEXP_REPLACE para extraer solo números
         persona = execute_query_one(
-            "SELECT * FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT * FROM personas WHERE cedula = ?",
-            (cedula,)
+            "SELECT * FROM personas WHERE REGEXP_REPLACE(cedula, '[^0-9]', '', 'g') = %s",
+            (numeros_cedula,)
         )
-        
+
         print(f"🔍 Resultado de búsqueda: {persona}")
         
         if persona:
