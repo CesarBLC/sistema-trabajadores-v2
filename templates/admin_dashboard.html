@@ -417,27 +417,27 @@
                     <tbody>
                         {% for persona in personas %}
                         <tr>
-                            <td><strong>{{ persona[1] }}</strong></td>
-                            <td><strong>{{ persona[2] }}</strong></td>
-                            <td>{{ persona[3] }}</td>
-                            <td>{{ persona[5] }}</td>
-                            <td>{{ persona[4] }}</td>
+                            <td><strong>{{ persona.nombres }}</strong></td>
+                            <td><strong>{{ persona.apellidos }}</strong></td>
+                            <td>{{ persona.cedula }}</td>
+                            <td>{{ persona.cargo }}</td>
+                            <td>{{ persona.fecha_emision }}</td>
                             <td>
                                 <div class="actions">
-                                    <a href="{{ url_for('editar_persona', persona_id=persona[0]) }}" 
+                                    <a href="{{ url_for('editar_persona', persona_id=persona.id) }}" 
                                        class="btn-sm btn-edit">
                                         ✏️ Editar
                                     </a>
-                                    <a href="{{ url_for('generar_pdf', persona_id=persona[0]) }}" 
+                                    <a href="{{ url_for('generar_pdf', persona_id=persona.id) }}" 
                                        class="btn-sm btn-pdf">
                                         📄 PDF
                                     </a>
-                                    <a href="{{ url_for('eliminar_persona', persona_id=persona[0]) }}" 
+                                    <a href="{{ url_for('eliminar_persona', persona_id=persona.id) }}" 
                                        class="btn-sm btn-delete"
                                        onclick="return confirm('¿Estás seguro de eliminar este trabajador?')">
                                         🗑️ Eliminar
                                     </a>
-                                   <a href="{{ url_for('admin_ver_perfil', persona_id=persona[0]) }}" class="btn-sm btn-info">Ver Perfil</a>
+                                   <a href="{{ url_for('admin_ver_perfil', persona_id=persona.id) }}" class="btn-sm btn-info">Ver Perfil</a>
                                 </div>
                             </td>
                         </tr>
