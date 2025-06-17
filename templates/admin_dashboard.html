@@ -13,59 +13,81 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 50%, #00247D 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             padding: 20px;
         }
 
+        /* Barra superior con colores de Venezuela */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #FFDD00 33.33%, #003DA5 33.33%, #003DA5 66.66%, #CF142B 66.66%);
+            z-index: 1000;
+        }
+
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px 30px;
-            border-radius: 15px;
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
             margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
+            position: relative;
         }
+
+        /* Acento minimalista con colores de Venezuela */
+        .venezuela-accent {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-yellow { background: #FFDD00; }
+        .dot-blue { background: #003DA5; }
+        .dot-red { background: #CF142B; }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
-        .venezuela-flag {
-            width: 50px;
-            height: 35px;
-            border-radius: 5px;
-            background: linear-gradient(to bottom, 
-                #FFCC00 0%, #FFCC00 33.33%, 
-                #00247D 33.33%, #00247D 66.66%, 
-                #CF142B 66.66%, #CF142B 100%);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            position: relative;
-        }
-
-        .venezuela-flag::after {
-            content: '⭐⭐⭐⭐⭐⭐⭐⭐';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: #003DA5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            font-size: 4px;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            font-size: 20px;
+            font-weight: bold;
         }
 
         h1 {
-            color: #00247D;
+            color: #003DA5;
             font-size: 28px;
-            font-weight: 700;
+            font-weight: 600;
+            margin: 0;
         }
 
         .header-right {
@@ -75,88 +97,93 @@
         }
 
         .btn {
-            padding: 12px 20px;
+            padding: 16px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 500;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            text-align: center;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 100%);
+            background: #003DA5;
             color: white;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(207, 20, 43, 0.4);
+            background: #002a7a;
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #CF142B 0%, #00247D 100%);
+            background: #CF142B;
             color: white;
         }
 
         .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 36, 125, 0.4);
+            background: #a10e22;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
         }
 
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #FFCC00 0%, #ffd700 100%);
-            color: #00247D;
-            padding: 25px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 30px 25px;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.3);
-            transition: transform 0.3s ease;
+            transition: border-color 0.2s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            border-color: #003DA5;
         }
 
         .stat-number {
             font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 5px;
+            font-weight: 600;
+            color: #003DA5;
+            margin-bottom: 8px;
         }
 
         .stat-label {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 15px;
+            color: #6c757d;
+            font-weight: 500;
         }
 
         .section-title {
-            color: #00247D;
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 20px;
+            color: #003DA5;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -165,7 +192,7 @@
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
         }
 
         table {
@@ -175,25 +202,25 @@
         }
 
         th {
-            background: linear-gradient(135deg, #00247D 0%, #CF142B 100%);
-            color: white;
-            padding: 15px 12px;
+            background: #f8f9fa;
+            color: #495057;
+            padding: 20px 16px;
             text-align: left;
             font-weight: 600;
             font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
         }
 
         td {
-            padding: 15px 12px;
+            padding: 20px 16px;
             border-bottom: 1px solid #f0f0f0;
             vertical-align: middle;
+            color: #495057;
         }
 
         tr:hover {
-            background-color: rgba(255, 204, 0, 0.1);
-            transition: background-color 0.3s ease;
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
         }
 
         .actions {
@@ -203,22 +230,22 @@
         }
 
         .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 8px 16px;
+            font-size: 13px;
             border-radius: 6px;
             text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
         }
 
         .btn-edit {
-            background: #FFCC00;
-            color: #00247D;
+            background: #003DA5;
+            color: white;
         }
 
         .btn-edit:hover {
-            background: #ffd700;
-            transform: scale(1.05);
+            background: #002a7a;
         }
 
         .btn-delete {
@@ -227,77 +254,109 @@
         }
 
         .btn-delete:hover {
-            background: #b8121f;
-            transform: scale(1.05);
+            background: #a10e22;
         }
 
         .btn-pdf {
-            background: #00247D;
+            background: #6c757d;
             color: white;
         }
 
         .btn-pdf:hover {
-            background: #001e5c;
-            transform: scale(1.05);
+            background: #545b62;
+        }
+
+        .btn-info {
+            background: white;
+            color: #003DA5;
+            border: 1px solid #003DA5;
+        }
+
+        .btn-info:hover {
+            background: #003DA5;
+            color: white;
         }
 
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: #666;
+            padding: 80px 20px;
+            color: #6c757d;
         }
 
         .empty-icon {
             font-size: 48px;
             margin-bottom: 20px;
-            opacity: 0.5;
+            color: #adb5bd;
+        }
+
+        .empty-state h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 30px;
         }
 
         .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
             font-weight: 500;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            border-left: 4px solid;
         }
 
         .alert-success {
-            background: linear-gradient(135deg, #FFCC00, #ffd700);
-            color: #00247D;
-            border-left: 4px solid #00247D;
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
         }
 
         .alert-error {
-            background: linear-gradient(135deg, #CF142B, #ff4757);
-            color: white;
-            border-left: 4px solid #00247D;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #CF142B;
+        }
+
+        .membrete {
+            font-size: 11px;
+            color: #6c757d;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            text-align: left;
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
             .header {
+                padding: 25px;
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .header-left {
+                justify-content: center;
             }
 
             .header-right {
                 flex-direction: column;
                 width: 100%;
+                gap: 10px;
             }
 
             .btn {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .container {
+                padding: 25px;
             }
 
             .stats {
@@ -308,6 +367,10 @@
                 font-size: 24px;
             }
 
+            .section-title {
+                font-size: 20px;
+            }
+
             .actions {
                 flex-direction: column;
             }
@@ -315,62 +378,89 @@
             .btn-sm {
                 width: 100%;
                 text-align: center;
+                justify-content: center;
+            }
+
+            th, td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .venezuela-accent {
+                top: 15px;
+                right: 15px;
             }
         }
 
-        /* Efectos de partículas flotantes */
-        .floating-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
+        /* Tabla responsive mejorada */
+        @media (max-width: 600px) {
+            .table-container {
+                border: none;
+            }
 
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            animation: float 8s ease-in-out infinite;
-        }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
 
-        .particle:nth-child(1) { left: 10%; top: 20%; background: #FFCC00; animation-delay: 0s; }
-        .particle:nth-child(2) { left: 20%; top: 80%; background: #CF142B; animation-delay: -2s; }
-        .particle:nth-child(3) { left: 60%; top: 40%; background: #00247D; animation-delay: -4s; }
-        .particle:nth-child(4) { left: 80%; top: 10%; background: #FFCC00; animation-delay: -1s; }
-        .particle:nth-child(5) { left: 40%; top: 90%; background: #CF142B; animation-delay: -3s; }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+            tr {
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: white;
+            }
+
+            td {
+                border: none;
+                position: relative;
+                padding: 10px 0 10px 35%;
+                text-align: left;
+            }
+
+            td:before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 0;
+                width: 30%;
+                font-weight: 600;
+                color: #003DA5;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Partículas flotantes -->
-    <div class="floating-particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
     <!-- Header -->
     <div class="header">
-        <div class="header-left">
-            <div class="venezuela-flag"></div>
-            <h1>🎯 Panel Administrativo</h1>
+        <!-- Acento minimalista con colores de Venezuela -->
+        <div class="venezuela-accent">
+            <div class="color-dot dot-yellow"></div>
+            <div class="color-dot dot-blue"></div>
+            <div class="color-dot dot-red"></div>
         </div>
+
+        <div class="header-left">
+            <div class="logo">ADM</div>
+            <div>
+                <div class="membrete">
+                    Panel Administrativo - Sistema de Gestión<br>
+                    Unión Bolivariana de Trabajadores
+                </div>
+                <h1>Panel Administrativo</h1>
+            </div>
+        </div>
+        
         <div class="header-right">
             <a href="{{ url_for('agregar_persona') }}" class="btn btn-primary">
-                ➕ Agregar Trabajador
+                + Agregar Trabajador
             </a>
             <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">
-                🚪 Cerrar Sesión
+                Cerrar Sesión
             </a>
         </div>
     </div>
@@ -394,12 +484,18 @@
                 <div class="stat-number">{{ personas|length }}</div>
                 <div class="stat-label">Trabajadores Registrados</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Consultas Este Mes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">PDFs Generados</div>
+            </div>
         </div>
 
         <!-- Lista de trabajadores -->
-        <h2 class="section-title">
-            👥 Lista de Trabajadores
-        </h2>
+        <h2 class="section-title">Lista de Trabajadores</h2>
 
         {% if personas %}
             <div class="table-container">
@@ -417,27 +513,22 @@
                     <tbody>
                         {% for persona in personas %}
                         <tr>
-                            <td><strong>{{ persona.nombres }}</strong></td>
-                            <td><strong>{{ persona.apellidos }}</strong></td>
-                            <td>{{ persona.cedula }}</td>
-                            <td>{{ persona.cargo }}</td>
-                            <td>{{ persona.fecha_emision }}</td>
-                            <td>
+                            <td data-label="Nombres">{{ persona.nombres }}</td>
+                            <td data-label="Apellidos">{{ persona.apellidos }}</td>
+                            <td data-label="Cédula">{{ persona.cedula }}</td>
+                            <td data-label="Cargo">{{ persona.cargo }}</td>
+                            <td data-label="Fecha Emisión">{{ persona.fecha_emision }}</td>
+                            <td data-label="Acciones">
                                 <div class="actions">
+                                    <a href="{{ url_for('admin_ver_perfil', persona_id=persona.id) }}" 
+                                       class="btn-sm btn-info">Ver Perfil</a>
                                     <a href="{{ url_for('editar_persona', persona_id=persona.id) }}" 
-                                       class="btn-sm btn-edit">
-                                        ✏️ Editar
-                                    </a>
+                                       class="btn-sm btn-edit">Editar</a>
                                     <a href="{{ url_for('generar_pdf', persona_id=persona.id) }}" 
-                                       class="btn-sm btn-pdf">
-                                        📄 PDF
-                                    </a>
+                                       class="btn-sm btn-pdf">PDF</a>
                                     <a href="{{ url_for('eliminar_persona', persona_id=persona.id) }}" 
                                        class="btn-sm btn-delete"
-                                       onclick="return confirm('¿Estás seguro de eliminar este trabajador?')">
-                                        🗑️ Eliminar
-                                    </a>
-                                   <a href="{{ url_for('admin_ver_perfil', persona_id=persona.id) }}" class="btn-sm btn-info">Ver Perfil</a>
+                                       onclick="return confirm('¿Estás seguro de eliminar este trabajador?')">Eliminar</a>
                                 </div>
                             </td>
                         </tr>
@@ -450,31 +541,21 @@
                 <div class="empty-icon">📋</div>
                 <h3>No hay trabajadores registrados</h3>
                 <p>Comienza agregando el primer trabajador al sistema</p>
-                <br>
                 <a href="{{ url_for('agregar_persona') }}" class="btn btn-primary">
-                    ➕ Agregar Primer Trabajador
+                    + Agregar Primer Trabajador
                 </a>
             </div>
         {% endif %}
     </div>
 
     <script>
-        // Confirmación mejorada para eliminar
+        // Confirmación para eliminar
         document.querySelectorAll('.btn-delete').forEach(button => {
             button.addEventListener('click', function(e) {
-                if (!confirm('⚠️ ¿Estás seguro de eliminar este trabajador?\n\nEsta acción no se puede deshacer.')) {
+                if (!confirm('¿Estás seguro de eliminar este trabajador?\n\nEsta acción no se puede deshacer.')) {
                     e.preventDefault();
                 }
             });
-        });
-
-        // Efecto de carga suave
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
         });
     </script>
 </body>
