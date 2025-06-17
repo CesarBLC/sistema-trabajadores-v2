@@ -13,94 +13,94 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 50%, #00247D 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            position: relative;
         }
 
-        /* Efecto de estrellas animadas */
+        /* Barra superior con colores de Venezuela */
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(2px 2px at 20px 30px, white, transparent),
-                radial-gradient(2px 2px at 40px 70px, white, transparent),
-                radial-gradient(1px 1px at 90px 40px, white, transparent),
-                radial-gradient(1px 1px at 130px 80px, white, transparent),
-                radial-gradient(2px 2px at 160px 30px, white, transparent);
-            background-repeat: repeat;
-            background-size: 200px 100px;
-            animation: sparkle 3s linear infinite;
-            opacity: 0.3;
-        }
-
-        @keyframes sparkle {
-            from { transform: translateY(0px); }
-            to { transform: translateY(-100px); }
+            height: 6px;
+            background: linear-gradient(90deg, #FFDD00 33.33%, #003DA5 33.33%, #003DA5 66.66%, #CF142B 66.66%);
+            z-index: 1000;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: white;
             padding: 50px 40px;
-            border-radius: 20px;
-            box-shadow: 
-                0 25px 70px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
             max-width: 450px;
             width: 100%;
+            border: 1px solid #e9ecef;
             position: relative;
-            z-index: 1;
         }
 
-        .venezuela-flag {
-            width: 100px;
-            height: 70px;
-            margin: 0 auto 25px;
-            border-radius: 8px;
-            background: linear-gradient(to bottom, 
-                #FFCC00 0%, #FFCC00 33.33%, 
-                #00247D 33.33%, #00247D 66.66%, 
-                #CF142B 66.66%, #CF142B 100%);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .venezuela-flag::after {
-            content: '⭐⭐⭐⭐⭐⭐⭐⭐';
+        /* Acento minimalista con colores de Venezuela */
+        .venezuela-accent {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-yellow { background: #FFDD00; }
+        .dot-blue { background: #003DA5; }
+        .dot-red { background: #CF142B; }
+
+        .membrete {
+            font-size: 11px;
+            color: #6c757d;
+            line-height: 1.3;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 350px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: #003DA5;
+            border-radius: 12px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            font-size: 8px;
-            letter-spacing: 1px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 24px;
+            font-weight: bold;
         }
 
         h1 {
-            color: #00247D;
-            margin-bottom: 15px;
-            font-size: 32px;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            color: #003DA5;
+            margin-bottom: 12px;
+            font-size: 28px;
+            font-weight: 600;
         }
 
         .subtitle {
-            color: #CF142B;
+            color: #6c757d;
             margin-bottom: 35px;
             font-size: 16px;
-            font-weight: 500;
+            line-height: 1.4;
         }
 
         .form-group {
@@ -110,141 +110,120 @@
 
         label {
             display: block;
-            margin-bottom: 10px;
-            color: #00247D;
-            font-weight: 600;
-            font-size: 14px;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 15px;
         }
 
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             font-size: 16px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            transition: border-color 0.2s ease;
+            background: white;
         }
 
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
-            border-color: #FFCC00;
-            box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
-            transform: translateY(-2px);
+            border-color: #003DA5;
         }
 
         .btn {
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 100%);
+            background: #003DA5;
             color: white;
-            padding: 18px 35px;
+            padding: 16px 32px;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             width: 100%;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
+            transition: background-color 0.2s ease;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(207, 20, 43, 0.4);
+            background: #002a7a;
         }
 
         .btn:active {
-            transform: translateY(-1px);
+            background: #001f5c;
         }
 
         .back-link {
-            margin-top: 30px;
+            margin-top: 35px;
             padding-top: 25px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #e9ecef;
+            position: relative;
+        }
+
+        .back-link::after {
+            content: 'o';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 15px;
+            color: #adb5bd;
+            font-size: 14px;
         }
 
         .back-link a {
-            color: #00247D;
+            color: #CF142B;
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            transition: color 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
         }
 
         .back-link a:hover {
-            color: #CF142B;
-            transform: translateX(-5px);
+            color: #a10e22;
+            text-decoration: underline;
         }
 
         .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 25px;
             font-weight: 500;
-            position: relative;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            border-left: 4px solid;
         }
 
         .alert-error {
-            background: linear-gradient(135deg, #CF142B, #ff4757);
-            color: white;
-            box-shadow: 0 8px 25px rgba(207, 20, 43, 0.3);
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #CF142B;
         }
 
         .alert-success {
-            background: linear-gradient(135deg, #FFCC00, #ffd700);
-            color: #00247D;
-            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.3);
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
         }
 
-        /* Efectos de partículas */
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: #FFCC00;
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
         }
 
-        .particle:nth-child(2) { left: 20%; animation-delay: -2s; background: #CF142B; }
-        .particle:nth-child(3) { left: 40%; animation-delay: -4s; background: #00247D; }
-        .particle:nth-child(4) { left: 60%; animation-delay: -1s; background: #FFCC00; }
-        .particle:nth-child(5) { left: 80%; animation-delay: -3s; background: #CF142B; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 1; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+        .admin-badge::before {
+            content: '🔐';
+            font-size: 14px;
         }
 
         @media (max-width: 600px) {
@@ -254,28 +233,57 @@
             }
             
             h1 {
-                font-size: 28px;
+                font-size: 24px;
             }
 
-            .venezuela-flag {
-                width: 80px;
-                height: 56px;
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
             }
+
+            .venezuela-accent {
+                top: 15px;
+                right: 15px;
+            }
+        }
+
+        /* Pequeña animación sutil para el logo */
+        .logo {
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Efecto focus sutil */
+        input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1);
         }
     </style>
 </head>
 <body>
-    <!-- Partículas flotantes -->
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-
     <div class="container">
-        <div class="venezuela-flag"></div>
-        <h1>Panel Administrativo</h1>
-        <p class="subtitle">Acceso exclusivo para administradores</p>
+        <!-- Acento minimalista con colores de Venezuela -->
+        <div class="venezuela-accent">
+            <div class="color-dot dot-yellow"></div>
+            <div class="color-dot dot-blue"></div>
+            <div class="color-dot dot-red"></div>
+        </div>
+
+        <div class="membrete">
+            Sistema de Gestión Administrativa<br>
+            Unión Bolivariana de Trabajadores de la<br>
+            Industria de la Construcción y Similares
+        </div>
+
+        <div class="logo">ADM</div>
+        
+        <div class="admin-badge">Área Restringida</div>
+        
+        <h1>Acceso Administrativo</h1>
+        <p class="subtitle">Ingresa tus credenciales para acceder al panel de administración</p>
         
         <!-- Mostrar mensajes flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -290,7 +298,7 @@
 
         <form action="{{ url_for('admin_login') }}" method="POST">
             <div class="form-group">
-                <label for="username">👤 Usuario:</label>
+                <label for="username">Usuario:</label>
                 <input type="text" 
                        id="username" 
                        name="username" 
@@ -300,7 +308,7 @@
             </div>
             
             <div class="form-group">
-                <label for="password">🔒 Contraseña:</label>
+                <label for="password">Contraseña:</label>
                 <input type="password" 
                        id="password" 
                        name="password" 
@@ -309,7 +317,7 @@
                        autocomplete="current-password">
             </div>
             
-            <button type="submit" class="btn">🚀 Iniciar Sesión</button>
+            <button type="submit" class="btn">Iniciar Sesión</button>
         </form>
 
         <div class="back-link">
@@ -318,20 +326,33 @@
     </div>
 
     <script>
-        // Efecto de focus mejorado
+        // Auto-focus en el primer campo
+        document.getElementById('username').focus();
+
+        // Validación básica del formulario
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos.');
+                return false;
+            }
+        });
+
+        // Efecto sutil en los inputs
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transform = 'translateY(-1px)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
             });
             
             input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
+                this.parentElement.style.transform = 'translateY(0)';
             });
         });
-
-        // Auto-focus en el primer campo
-        document.getElementById('username').focus();
     </script>
 </body>
 </html>

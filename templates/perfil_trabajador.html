@@ -13,103 +13,106 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 50%, #00247D 100%);
+            background: #f8f9fa;
             min-height: 100vh;
-            padding: 20px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .card-container {
-            background: white;
-            border-radius: 25px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            max-width: 450px;
-            width: 100%;
-            position: relative;
-            animation: slideIn 0.8s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, #CF142B 0%, #FFCC00 100%);
-            padding: 30px 25px 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header-bg {
-            position: absolute;
+        /* Barra superior con colores de Venezuela */
+        body::before {
+            content: '';
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, #CF142B 0%, #CF142B 40%, #FFCC00 40%, #FFCC00 100%);
-            opacity: 0.9;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #FFDD00 33.33%, #003DA5 33.33%, #003DA5 66.66%, #CF142B 66.66%);
+            z-index: 1000;
         }
 
-        .header-content {
+        .container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid #e9ecef;
             position: relative;
-            z-index: 2;
         }
 
-        .union-title {
-            color: white;
+        /* Acento sutil con colores de Venezuela */
+        .venezuela-accent {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-yellow { background: #FFDD00; }
+        .dot-blue { background: #003DA5; }
+        .dot-red { background: #CF142B; }
+
+        .membrete {
             font-size: 11px;
-            font-weight: 800;
+            color: #6c757d;
+            line-height: 1.3;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .verified-badge {
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            line-height: 1.2;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 25px;
         }
 
         .photo-container {
-            position: relative;
-            margin: 20px auto;
-            width: 180px;
-            height: 180px;
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         .photo-frame {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #FFCC00, #ffd700);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #CF142B, #FFDD00);
             border-radius: 50%;
-            padding: 8px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            margin: 0 auto;
             position: relative;
         }
 
         .photo-frame::before {
             content: '';
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            background: linear-gradient(45deg, #CF142B, #00247D, #FFCC00);
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #CF142B, #FFDD00);
             border-radius: 50%;
             z-index: -1;
-            animation: rotate 3s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            opacity: 0.3;
         }
 
         .photo {
@@ -117,290 +120,191 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: #f8f9fa;
         }
 
         .photo-placeholder {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
-            color: #999;
-            border: 4px solid white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            font-size: 40px;
+            color: #adb5bd;
         }
 
         .worker-name {
-            color: #00247D;
-            font-size: 36px;
-            font-weight: 900;
+            color: #003DA5;
+            font-size: 28px;
+            font-weight: 600;
             text-align: center;
-            margin: 25px 0 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .cargo-container {
+            text-align: center;
+            margin-bottom: 35px;
         }
 
         .cargo-badge {
-            display: inline-flex;
-            align-items: center;
-            background: linear-gradient(135deg, #FFCC00 0%, #CF142B 100%);
+            background: #003DA5;
             color: white;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-weight: 800;
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 25px rgba(207, 20, 43, 0.4);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .cargo-label {
-            background: #FFCC00;
-            color: #00247D;
-            padding: 4px 12px;
-            border-radius: 15px 0 0 15px;
-            font-size: 12px;
-            font-weight: 900;
-            margin-right: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-block;
         }
 
         .info-section {
-            padding: 30px;
-            background: white;
+            border-top: 1px solid #e9ecef;
+            padding-top: 30px;
         }
 
         .info-item {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-            border-left: 5px solid #FFCC00;
-            transition: all 0.3s ease;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #FFDD00;
         }
 
-        .info-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .info-item:nth-child(even) {
-            border-left-color: #CF142B;
+        .info-item:nth-child(2n) {
+            border-left-color: #003DA5;
         }
 
         .info-item:nth-child(3n) {
-            border-left-color: #00247D;
+            border-left-color: #CF142B;
         }
 
         .info-label {
-            font-weight: 900;
-            color: #00247D;
+            font-weight: 600;
+            color: #495057;
             font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            min-width: 120px;
+            min-width: 100px;
             margin-right: 15px;
         }
 
         .info-value {
-            font-weight: 700;
-            color: #333;
-            font-size: 16px;
+            color: #212529;
+            font-size: 15px;
+            font-weight: 500;
             flex: 1;
         }
 
         .footer {
-            background: linear-gradient(135deg, #00247D 0%, #CF142B 100%);
-            padding: 25px;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e9ecef;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            animation: shine 3s ease-in-out infinite;
-        }
-
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
         }
 
         .venezuela-flag {
-            width: 200px;
-            height: 20px;
-            border-radius: 10px;
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
             background: linear-gradient(to right, 
-                #FFCC00 0%, #FFCC00 33.33%, 
-                #00247D 33.33%, #00247D 66.66%, 
+                #FFDD00 0%, #FFDD00 33.33%, 
+                #003DA5 33.33%, #003DA5 66.66%, 
                 #CF142B 66.66%, #CF142B 100%);
             margin: 0 auto 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .venezuela-flag::after {
-            content: '⭐⭐⭐⭐⭐⭐⭐⭐';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 8px;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
         }
 
         .footer-text {
-            color: white;
+            color: #6c757d;
             font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .verified-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            font-weight: 500;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            .card-container {
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
                 margin: 10px;
-                max-width: none;
             }
             
             .worker-name {
-                font-size: 28px;
+                font-size: 24px;
             }
             
-            .photo-container {
-                width: 150px;
-                height: 150px;
+            .photo-frame {
+                width: 100px;
+                height: 100px;
             }
-        }
 
-        /* Partículas flotantes */
-        .floating-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
+            .venezuela-accent {
+                top: 15px;
+                right: 15px;
+            }
 
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
 
-        .particle:nth-child(1) { left: 10%; top: 20%; background: #FFCC00; animation-delay: 0s; }
-        .particle:nth-child(2) { left: 80%; top: 80%; background: #CF142B; animation-delay: -2s; }
-        .particle:nth-child(3) { left: 60%; top: 40%; background: #00247D; animation-delay: -4s; }
-        .particle:nth-child(4) { left: 90%; top: 10%; background: #FFCC00; animation-delay: -1s; }
-        .particle:nth-child(5) { left: 20%; top: 90%; background: #CF142B; animation-delay: -3s; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
-            50% { transform: translateY(-30px) rotate(180deg); opacity: 1; }
+            .info-label {
+                margin-bottom: 5px;
+                margin-right: 0;
+                min-width: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Partículas flotantes -->
-    <div class="floating-particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <!-- Tarjeta del trabajador -->
-    <div class="card-container">
-        <!-- Badge de verificado -->
-        <div class="verified-badge">
-            ✓ Verificado
+    <div class="container">
+        <!-- Acento minimalista con colores de Venezuela -->
+        <div class="venezuela-accent">
+            <div class="color-dot dot-yellow"></div>
+            <div class="color-dot dot-blue"></div>
+            <div class="color-dot dot-red"></div>
         </div>
 
-        <!-- Header con título del sindicato -->
-        <div class="card-header">
-            <div class="header-bg"></div>
-            <div class="header-content">
-                <div class="union-title">
-                    Unión Bolivariana de Trabajadores de la<br>
-                    Industria de la Construcción, Cemento, Madera<br>
-                    Maquinarias Pesadas, Vialidades y Similares de<br>
-                    la República Bolivariana de Venezuela
-                </div>
-                
-                <!-- Foto del trabajador -->
-                <div class="photo-container">
-                    <div class="photo-frame">
-                        <!-- Aquí iría la foto si la tienes en tu base de datos -->
-                        <div class="photo-placeholder">
-                            👤
-                        </div>
-                        <!-- Para cuando tengas fotos, usa esto:
-                        <img src="ruta_de_la_foto" alt="Foto del trabajador" class="photo">
-                        -->
-                    </div>
-                </div>
+        <!-- Membrete igual que inicio.html -->
+        <div class="membrete">
+            Unión Bolivariana de Trabajadores de la<br>
+            Industria de la Construcción, Cemento, Madera<br>
+            Maquinarias Pesadas, Vialidades y Similares de<br>
+            la República Bolivariana de Venezuela
+        </div>
+
+        <!-- Badge de verificado -->
+        <div style="text-align: center;">
+            <div class="verified-badge">
+                ✓ Verificado
             </div>
         </div>
 
-        <!-- Nombre del trabajador - CORREGIDO -->
+        <!-- Foto del trabajador con efecto rojo/naranja conservado -->
+        <div class="photo-container">
+            <div class="photo-frame">
+                <div class="photo-placeholder">
+                    👤
+                </div>
+                <!-- Para cuando tengas fotos, usa esto:
+                <img src="ruta_de_la_foto" alt="Foto del trabajador" class="photo">
+                -->
+            </div>
+        </div>
+
+        <!-- Nombre del trabajador -->
         <div class="worker-name">
             {{ persona.nombres }} {{ persona.apellidos }}
         </div>
 
-        <!-- Badge del cargo - CORREGIDO -->
-        <div style="text-align: center;">
+        <!-- Badge del cargo -->
+        <div class="cargo-container">
             <div class="cargo-badge">
-                <span class="cargo-label">Cargo:</span>
                 {{ persona.cargo }}
             </div>
         </div>
 
-        <!-- Información del trabajador - CORREGIDO -->
+        <!-- Información del trabajador -->
         <div class="info-section">
             <div class="info-item">
                 <div class="info-label">Nombres:</div>
@@ -431,28 +335,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        // Efecto de carga suave
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.8s ease';
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
-        });
-
-        // Efecto de parallax suave en las partículas
-        document.addEventListener('mousemove', function(e) {
-            const particles = document.querySelectorAll('.particle');
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
-            
-            particles.forEach((particle, index) => {
-                const speed = (index + 1) * 0.5;
-                particle.style.transform += ` translate(${x * speed}px, ${y * speed}px)`;
-            });
-        });
-    </script>
 </body>
 </html>
