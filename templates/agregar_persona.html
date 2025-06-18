@@ -182,7 +182,7 @@
             font-size: 15px;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 16px;
             border: 2px solid #e9ecef;
@@ -192,9 +192,67 @@
             background: white;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #003DA5;
+        }
+
+        /* Estilos específicos para el campo de archivo */
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px dashed #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-input:hover {
+            border-color: #003DA5;
+            background: #f0f8ff;
+        }
+
+        .file-input input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        .file-input-text {
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .file-input-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #003DA5;
+        }
+
+        /* Estilos para el select de sindicato */
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
         }
 
         .form-actions {
@@ -353,7 +411,7 @@
             Datos del Trabajador
         </h2>
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nombres">Nombres:</label>
@@ -378,6 +436,32 @@
                 <div class="form-group full-width">
                     <label for="cargo">Cargo:</label>
                     <input type="text" id="cargo" name="cargo" placeholder="Ejemplo: Desarrollador, Analista, etc." required>
+                </div>
+
+                <!-- NUEVO: Campo de Sindicato -->
+                <div class="form-group">
+                    <label for="sindicato">Sindicato:</label>
+                    <select id="sindicato" name="sindicato" required>
+                        <option value="">Seleccionar sindicato...</option>
+                        <option value="UBT">UBT</option>
+                        <option value="CBST">CBST</option>
+                        <option value="FUNTTBCCAC">FUNTTBCCAC</option>
+                    </select>
+                </div>
+
+                <!-- NUEVO: Campo de Foto -->
+                <div class="form-group">
+                    <label for="foto">Foto del Trabajador:</label>
+                    <div class="file-input-container">
+                        <div class="file-input">
+                            <input type="file" id="foto" name="foto" accept="image/*">
+                            <div class="file-input-icon">📷</div>
+                            <div class="file-input-text">
+                                Seleccionar foto tipo carnet<br>
+                                <small>(PNG, JPG, JPEG, GIF - Máx. 16MB)</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -414,6 +498,29 @@
                 e.target.value = 'V-' + numeros;
             } else {
                 e.target.value = '';
+            }
+        });
+
+        // Actualizar texto del input de archivo cuando se selecciona
+        document.getElementById('foto').addEventListener('change', function(e) {
+            const fileInput = e.target;
+            const textElement = fileInput.parentElement.querySelector('.file-input-text');
+            
+            if (fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                textElement.innerHTML = `
+                    <strong>Archivo seleccionado:</strong><br>
+                    ${fileName}
+                `;
+                fileInput.parentElement.style.borderColor = '#28a745';
+                fileInput.parentElement.style.backgroundColor = '#f0fff4';
+            } else {
+                textElement.innerHTML = `
+                    Seleccionar foto tipo carnet<br>
+                    <small>(PNG, JPG, JPEG, GIF - Máx. 16MB)</small>
+                `;
+                fileInput.parentElement.style.borderColor = '#e9ecef';
+                fileInput.parentElement.style.backgroundColor = '#f8f9fa';
             }
         });
     </script>

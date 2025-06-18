@@ -159,6 +159,18 @@
             display: inline-block;
         }
 
+        /* Nuevo estilo para el sindicato */
+        .sindicato-badge {
+            background: #CF142B;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
         .info-section {
             border-top: 1px solid #e9ecef;
             padding-top: 30px;
@@ -253,6 +265,11 @@
                 margin-right: 0;
                 min-width: auto;
             }
+
+            .sindicato-badge {
+                margin-left: 0;
+                margin-top: 8px;
+            }
         }
     </style>
 </head>
@@ -280,15 +297,18 @@
             </div>
         </div>
 
-        <!-- Foto del trabajador con efecto rojo/naranja conservado -->
+        <!-- Foto del trabajador -->
         <div class="photo-container">
             <div class="photo-frame">
-                <div class="photo-placeholder">
-                    👤
-                </div>
-                <!-- Para cuando tengas fotos, usa esto:
-                <img src="ruta_de_la_foto" alt="Foto del trabajador" class="photo">
-                -->
+                {% if persona.foto %}
+                    <img src="{{ url_for('static', filename='fotos_trabajadores/' + persona.foto) }}" 
+                         alt="Foto de {{ persona.nombres }} {{ persona.apellidos }}" 
+                         class="photo">
+                {% else %}
+                    <div class="photo-placeholder">
+                        👤
+                    </div>
+                {% endif %}
             </div>
         </div>
 
@@ -297,11 +317,16 @@
             {{ persona.nombres }} {{ persona.apellidos }}
         </div>
 
-        <!-- Badge del cargo -->
+        <!-- Badge del cargo y sindicato -->
         <div class="cargo-container">
             <div class="cargo-badge">
                 {{ persona.cargo }}
             </div>
+            {% if persona.sindicato %}
+                <div class="sindicato-badge">
+                    {{ persona.sindicato }}
+                </div>
+            {% endif %}
         </div>
 
         <!-- Información del trabajador -->
@@ -320,6 +345,13 @@
                 <div class="info-label">N° Cédula:</div>
                 <div class="info-value">{{ persona.cedula }}</div>
             </div>
+            
+            {% if persona.sindicato %}
+            <div class="info-item">
+                <div class="info-label">Sindicato:</div>
+                <div class="info-value">{{ persona.sindicato }}</div>
+            </div>
+            {% endif %}
             
             <div class="info-item">
                 <div class="info-label">F/ Emisión:</div>

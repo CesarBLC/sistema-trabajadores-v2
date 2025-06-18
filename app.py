@@ -9,6 +9,7 @@ import os
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from functools import wraps
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = '10000'  # Cambia esto por una clave segura
@@ -16,6 +17,22 @@ app.secret_key = '10000'  # Cambia esto por una clave segura
 # Credenciales de administrador (cámbialas por las tuyas)
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin123"
+
+# CONFIGURACIÓN PARA SUBIDA DE ARCHIVOS
+UPLOAD_FOLDER = 'static/fotos_trabajadores'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+
+# Crear directorio para fotos si no existe
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# SINDICATOS PREDETERMINADOS
+SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
+
+def allowed_file(filename):
+    """Verificar si el archivo tiene una extensión permitida"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Configuración de base de datos
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -36,7 +53,6 @@ def init_connection_pool():
             print(f"❌ Error creando pool de conexiones: {e}")
             # Si falla el pool, seguir sin él
             connection_pool = None
-
 
 def get_db_connection():
     if DATABASE_URL:
@@ -80,7 +96,9 @@ def crear_tabla_si_no_existe():
             apellidos VARCHAR(100) NOT NULL,
             cedula VARCHAR(20) NOT NULL UNIQUE,
             fecha_emision DATE NOT NULL,
-            cargo VARCHAR(100) NOT NULL
+            cargo VARCHAR(100) NOT NULL,
+            foto VARCHAR(255),
+            sindicato VARCHAR(100)
         )
         """
         
@@ -97,9 +115,54 @@ def crear_tabla_si_no_existe():
         print(f"❌ ERROR CREANDO TABLA: {e}")
         raise
 
+def actualizar_base_datos():
+    """Script para agregar las nuevas columnas a la tabla existente"""
+    if not DATABASE_URL:
+        return
+        
+    print("🔧 ACTUALIZANDO BASE DE DATOS...")
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        
+        # Verificar si las columnas ya existen
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'personas' AND column_name IN ('foto', 'sindicato')
+        """)
+        
+        existing_columns = [row[0] for row in cursor.fetchall()]
+        
+        # Agregar columna foto si no existe
+        if 'foto' not in existing_columns:
+            cursor.execute("ALTER TABLE personas ADD COLUMN foto VARCHAR(255);")
+            print("✅ Columna 'foto' agregada")
+        else:
+            print("ℹ️ Columna 'foto' ya existe")
+            
+        # Agregar columna sindicato si no existe
+        if 'sindicato' not in existing_columns:
+            cursor.execute("ALTER TABLE personas ADD COLUMN sindicato VARCHAR(100);")
+            print("✅ Columna 'sindicato' agregada")
+        else:
+            print("ℹ️ Columna 'sindicato' ya existe")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        print("✅ Base de datos actualizada exitosamente")
+        
+    except Exception as e:
+        print(f"❌ Error actualizando base de datos: {e}")
+        # No hacer raise aquí para no detener la aplicación
+        pass
+
 # EJECUTAR INMEDIATAMENTE al importar
 if DATABASE_URL:
     crear_tabla_si_no_existe()
+    actualizar_base_datos()
 
 # Función helper para conectar a la base de datos
 def execute_query(query, params=None, fetch=False):
@@ -305,13 +368,26 @@ def agregar_persona():
         cedula = request.form['cedula'].strip()
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
+        sindicato = request.form['sindicato'].strip()
 
         # Validar campos vacíos
-        if not all([nombres, apellidos, cedula, fecha_emision, cargo]):
+        if not all([nombres, apellidos, cedula, fecha_emision, cargo, sindicato]):
             flash('Todos los campos son obligatorios', 'error')
-            return render_template('agregar_persona.html')
+            return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
         print(f"💾 Guardando cédula: '{cedula}'")
+
+        # Manejo de la foto
+        foto_filename = None
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '' and allowed_file(file.filename):
+                # Crear nombre único usando cédula
+                filename = secure_filename(f"{cedula}_{file.filename}")
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                foto_filename = filename
+                print(f"📸 Foto guardada: {filename}")
 
         try:
             # Verificar si ya existe la cédula
@@ -322,18 +398,18 @@ def agregar_persona():
             
             if existing:
                 flash('Ya existe un trabajador con esa cédula', 'error')
-                return render_template('agregar_persona.html')
+                return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
             # Generar ID único
             persona_id = str(uuid.uuid4())
 
-            # Insertar en la base de datos
+            # Insertar en la base de datos (ACTUALIZADO con foto y sindicato)
             affected = execute_query(
-                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo) 
-                   VALUES (%s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
-                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo)
+                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
+                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_filename, sindicato)
             )
             
             if affected > 0:
@@ -355,18 +431,17 @@ def agregar_persona():
                 qr_url = '/' + qr_path
                 
                 flash('Trabajador agregado exitosamente', 'success')
-                return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id)
+                return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id, sindicatos=SINDICATOS)
             else:
                 flash('Error al guardar el trabajador. Intente nuevamente.', 'error')
-                return render_template('agregar_persona.html')
+                return render_template('agregar_persona.html', sindicatos=SINDICATOS)
                 
         except Exception as e:
             print(f"❌ Error al insertar: {e}")
             flash(f'Error en la base de datos: {str(e)}', 'error')
-            return render_template('agregar_persona.html')
+            return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
-    return render_template('agregar_persona.html')
-
+    return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
 @app.route('/admin/editar/<persona_id>', methods=['GET', 'POST'])
 @login_required
@@ -377,14 +452,41 @@ def editar_persona(persona_id):
         cedula = request.form['cedula'].strip()
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
+        sindicato = request.form['sindicato'].strip()
+        
+        # Obtener datos actuales para preservar foto si no se cambia
+        persona_actual = execute_query_one(
+            "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
+            (persona_id,)
+        )
+        
+        foto_filename = persona_actual['foto'] if persona_actual else None
+        
+        # Manejo de nueva foto
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '' and allowed_file(file.filename):
+                # Eliminar foto anterior si existe
+                if foto_filename:
+                    try:
+                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], foto_filename))
+                    except FileNotFoundError:
+                        pass
+                
+                # Guardar nueva foto
+                filename = secure_filename(f"{cedula}_{file.filename}")
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                foto_filename = filename
+                print(f"📸 Nueva foto guardada: {filename}")
         
         try:
             affected = execute_query(
-                """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s 
+                """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s, foto=%s, sindicato=%s 
                    WHERE id=%s""" if DATABASE_URL else
-                """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=? 
+                """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=? 
                    WHERE id=?""",
-                (nombres, apellidos, cedula, fecha_emision, cargo, persona_id)
+                (nombres, apellidos, cedula, fecha_emision, cargo, foto_filename, sindicato, persona_id)
             )
             
             if affected > 0:
@@ -405,7 +507,7 @@ def editar_persona(persona_id):
             )
             
             if persona:
-                return render_template('editar_persona.html', p=persona)
+                return render_template('editar_persona.html', p=persona, sindicatos=SINDICATOS)
             else:
                 flash('Trabajador no encontrado', 'error')
                 return redirect(url_for('admin_dashboard'))
@@ -414,11 +516,16 @@ def editar_persona(persona_id):
             flash(f'Error: {str(e)}', 'error')
             return redirect(url_for('admin_dashboard'))
 
-
 @app.route('/admin/eliminar/<persona_id>')
 @login_required
 def eliminar_persona(persona_id):
     try:
+        # Obtener datos antes de eliminar para borrar la foto
+        persona = execute_query_one(
+            "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
+            (persona_id,)
+        )
+        
         affected = execute_query(
             "DELETE FROM personas WHERE id = %s" if DATABASE_URL else "DELETE FROM personas WHERE id = ?",
             (persona_id,)
@@ -430,6 +537,14 @@ def eliminar_persona(persona_id):
                 os.remove(f'static/{persona_id}.png')
             except FileNotFoundError:
                 pass
+            
+            # Eliminar foto si existe
+            if persona and persona['foto']:
+                try:
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], persona['foto']))
+                    print(f"📸 Foto eliminada: {persona['foto']}")
+                except FileNotFoundError:
+                    pass
             
             flash('Trabajador eliminado correctamente', 'success')
         else:
@@ -461,7 +576,9 @@ def admin_ver_perfil(persona_id):
                     'apellidos': persona[2],
                     'cedula': persona[3],
                     'fecha_emision': persona[4],
-                    'cargo': persona[5]
+                    'cargo': persona[5],
+                    'foto': persona[6] if len(persona) > 6 else None,
+                    'sindicato': persona[7] if len(persona) > 7 else None
                 }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
@@ -492,7 +609,9 @@ def ver_perfil_publico(cedula):
                     'apellidos': persona[2],
                     'cedula': persona[3],
                     'fecha_emision': persona[4],
-                    'cargo': persona[5]
+                    'cargo': persona[5],
+                    'foto': persona[6] if len(persona) > 6 else None,
+                    'sindicato': persona[7] if len(persona) > 7 else None
                 }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
@@ -541,7 +660,9 @@ def generar_pdf(persona_id):
                 'apellidos': persona[2],
                 'cedula': persona[3],
                 'fecha_emision': persona[4],
-                'cargo': persona[5]
+                'cargo': persona[5],
+                'foto': persona[6] if len(persona) > 6 else None,
+                'sindicato': persona[7] if len(persona) > 7 else None
             }
 
         buffer = BytesIO()
@@ -550,6 +671,7 @@ def generar_pdf(persona_id):
         pdf.drawString(100, 730, f"Cédula: {p['cedula']}")
         pdf.drawString(100, 710, f"Fecha de Emisión: {p['fecha_emision']}")
         pdf.drawString(100, 690, f"Cargo: {p['cargo']}")
+        pdf.drawString(100, 670, f"Sindicato: {p.get('sindicato', 'No asignado')}")
         pdf.showPage()
         pdf.save()
         buffer.seek(0)

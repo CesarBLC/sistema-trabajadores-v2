@@ -169,6 +169,46 @@
             border-radius: 8px;
             margin-bottom: 35px;
             border-left: 3px solid #FFDD00;
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+        }
+
+        .current-photo {
+            flex-shrink: 0;
+        }
+
+        .photo-frame {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #CF142B, #FFDD00);
+            border-radius: 50%;
+            padding: 3px;
+            position: relative;
+        }
+
+        .photo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #adb5bd;
+        }
+
+        .current-details {
+            flex: 1;
         }
 
         .current-info h3 {
@@ -209,7 +249,7 @@
             font-size: 15px;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 16px;
             border: 2px solid #e9ecef;
@@ -219,9 +259,54 @@
             background: white;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #003DA5;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 16px;
+            border: 2px dashed #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .file-input-label:hover {
+            border-color: #003DA5;
+            background: #f0f8ff;
+        }
+
+        .file-input-label.has-file {
+            border-color: #28a745;
+            background: #d4f3d9;
+            color: #155724;
+        }
+
+        .file-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
         }
 
         .form-actions {
@@ -296,6 +381,15 @@
             h1 {
                 font-size: 24px;
             }
+
+            .current-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .current-photo {
+                align-self: center;
+            }
         }
 
         @media (max-width: 600px) {
@@ -349,18 +443,32 @@
 
         <!-- Información actual -->
         <div class="current-info">
-            <h3>Información Actual</h3>
-            <p><strong>Nombre Completo:</strong> {{ p.nombres }} {{ p.apellidos }}</p>
-            <p><strong>Cédula:</strong> {{ p.cedula }}</p>
-            <p><strong>Cargo:</strong> {{ p.cargo }}</p>
-            <p><strong>Fecha de Emisión:</strong> {{ p.fecha_emision }}</p>
+            <div class="current-photo">
+                <div class="photo-frame">
+                    {% if p.foto %}
+                        <img src="{{ url_for('static', filename='fotos_trabajadores/' + p.foto) }}" alt="Foto actual" class="photo">
+                    {% else %}
+                       <div class="photo-placeholder-mini">👤</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="current-details">
+                <h3>Información Actual</h3>
+                <p><strong>Nombre Completo:</strong> {{ p.nombres }} {{ p.apellidos }}</p>
+                <p><strong>Cédula:</strong> {{ p.cedula }}</p>
+                <p><strong>Cargo:</strong> {{ p.cargo }}</p>
+                <p><strong>Fecha de Emisión:</strong> {{ p.fecha_emision }}</p>
+                {% if p.sindicato %}
+                    <p><strong>Sindicato:</strong> {{ p.sindicato }}</p>
+                {% endif %}
+            </div>
         </div>
 
         <h2 class="section-title">
             Actualizar Datos
         </h2>
 
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nombres">Nombres:</label>
@@ -386,6 +494,32 @@
                     <label for="cargo">Cargo:</label>
                     <input type="text" id="cargo" name="cargo" value="{{ p.cargo }}" placeholder="Ejemplo: Desarrollador, Analista, etc." required>
                 </div>
+
+                <div class="form-group">
+                    <label for="sindicato">Sindicato:</label>
+                    <select id="sindicato" name="sindicato" required>
+                        <option value="">Seleccione un sindicato</option>
+                        <option value="UBT" {{ 'selected' if p.sindicato == 'UBT' }}>UBT</option>
+                        <option value="CBST" {{ 'selected' if p.sindicato == 'CBST' }}>CBST</option>
+                        <option value="FUNTTBCCAC" {{ 'selected' if p.sindicato == 'FUNTTBCCAC' }}>FUNTTBCCAC</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="foto">Cambiar Foto (Opcional):</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="foto" name="foto" class="file-input" accept="image/*">
+                        <label for="foto" class="file-input-label" id="foto-label">
+                            📷 Seleccionar nueva foto
+                        </label>
+                    </div>
+                    <div class="file-info">
+                        Formatos permitidos: PNG, JPG, JPEG, GIF. Máximo 16MB.
+                        {% if p.foto %}
+                            <br><strong>Foto actual:</strong> {{ p.foto }}
+                        {% endif %}
+                    </div>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -398,5 +532,20 @@
             </div>
         </form>
     </div>
+
+    <script>
+        // Manejar cambio de archivo
+        document.getElementById('foto').addEventListener('change', function(e) {
+            const label = document.getElementById('foto-label');
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                label.textContent = `📷 ${fileName}`;
+                label.classList.add('has-file');
+            } else {
+                label.textContent = '📷 Seleccionar nueva foto';
+                label.classList.remove('has-file');
+            }
+        });
+    </script>
 </body>
 </html>
