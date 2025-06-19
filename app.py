@@ -10,6 +10,9 @@ from io import BytesIO
 from reportlab.pdfgen import canvas
 from functools import wraps
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 app = Flask(__name__)
 app.secret_key = '10000'  # Cambia esto por una clave segura
@@ -18,14 +21,16 @@ app.secret_key = '10000'  # Cambia esto por una clave segura
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin123"
 
-# CONFIGURACIÓN PARA SUBIDA DE ARCHIVOS
-UPLOAD_FOLDER = 'static/fotos_trabajadores'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+# CONFIGURACIÓN DE CLOUDINARY
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+)
 
-# Crear directorio para fotos si no existe
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# CONFIGURACIÓN PARA SUBIDA DE ARCHIVOS
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 # SINDICATOS PREDETERMINADOS
 SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
@@ -33,6 +38,50 @@ SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
 def allowed_file(filename):
     """Verificar si el archivo tiene una extensión permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_to_cloudinary(file, cedula):
+    """Subir archivo a Cloudinary y retornar la URL"""
+    try:
+        # Crear un public_id único basado en la cédula
+        public_id = f"trabajadores/{cedula}_{uuid.uuid4().hex[:8]}"
+        
+        # Configurar opciones de transformación para optimizar la imagen
+        upload_result = cloudinary.uploader.upload(
+            file,
+            public_id=public_id,
+            folder="trabajadores",
+            transformation=[
+                {'width': 400, 'height': 400, 'crop': 'fill', 'gravity': 'face'},
+                {'quality': 'auto', 'fetch_format': 'auto'}
+            ],
+            overwrite=True,
+            invalidate=True
+        )
+        
+        print(f"✅ Imagen subida a Cloudinary: {upload_result['secure_url']}")
+        return upload_result['secure_url']
+        
+    except Exception as e:
+        print(f"❌ Error subiendo a Cloudinary: {e}")
+        return None
+
+def delete_from_cloudinary(foto_url):
+    """Eliminar imagen de Cloudinary usando la URL"""
+    try:
+        if foto_url and 'cloudinary.com' in foto_url:
+            # Extraer public_id de la URL
+            parts = foto_url.split('/')
+            if 'trabajadores' in parts:
+                public_id_with_ext = parts[parts.index('trabajadores') + 1]
+                public_id = public_id_with_ext.split('.')[0]  # Remover extensión
+                full_public_id = f"trabajadores/{public_id}"
+                
+                result = cloudinary.uploader.destroy(full_public_id)
+                print(f"🗑️ Imagen eliminada de Cloudinary: {result}")
+                return result
+    except Exception as e:
+        print(f"❌ Error eliminando de Cloudinary: {e}")
+    return None
 
 # Configuración de base de datos
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -88,7 +137,7 @@ def crear_tabla_si_no_existe():
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         
-        # Crear tabla
+        # Crear tabla - ACTUALIZADO: foto ahora guarda URL de Cloudinary
         create_sql = """
         CREATE TABLE IF NOT EXISTS personas (
             id VARCHAR(36) PRIMARY KEY,
@@ -97,7 +146,7 @@ def crear_tabla_si_no_existe():
             cedula VARCHAR(20) NOT NULL UNIQUE,
             fecha_emision DATE NOT NULL,
             cargo VARCHAR(100) NOT NULL,
-            foto VARCHAR(255),
+            foto TEXT,
             sindicato VARCHAR(100)
         )
         """
@@ -134,9 +183,9 @@ def actualizar_base_datos():
         
         existing_columns = [row[0] for row in cursor.fetchall()]
         
-        # Agregar columna foto si no existe
+        # Agregar columna foto si no existe (TEXT para URLs de Cloudinary)
         if 'foto' not in existing_columns:
-            cursor.execute("ALTER TABLE personas ADD COLUMN foto VARCHAR(255);")
+            cursor.execute("ALTER TABLE personas ADD COLUMN foto TEXT;")
             print("✅ Columna 'foto' agregada")
         else:
             print("ℹ️ Columna 'foto' ya existe")
@@ -377,17 +426,17 @@ def agregar_persona():
 
         print(f"💾 Guardando cédula: '{cedula}'")
 
-        # Manejo de la foto
-        foto_filename = None
+        # Manejo de la foto con Cloudinary
+        foto_url = None
         if 'foto' in request.files:
             file = request.files['foto']
             if file and file.filename != '' and allowed_file(file.filename):
-                # Crear nombre único usando cédula
-                filename = secure_filename(f"{cedula}_{file.filename}")
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                foto_filename = filename
-                print(f"📸 Foto guardada: {filename}")
+                print(f"📸 Subiendo foto a Cloudinary...")
+                foto_url = upload_to_cloudinary(file, cedula)
+                if foto_url:
+                    print(f"✅ Foto subida exitosamente: {foto_url}")
+                else:
+                    flash('Error al subir la foto. Se guardará el trabajador sin foto.', 'warning')
 
         try:
             # Verificar si ya existe la cédula
@@ -403,13 +452,13 @@ def agregar_persona():
             # Generar ID único
             persona_id = str(uuid.uuid4())
 
-            # Insertar en la base de datos (ACTUALIZADO con foto y sindicato)
+            # Insertar en la base de datos (ACTUALIZADO: foto ahora es URL de Cloudinary)
             affected = execute_query(
                 """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
                 """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_filename, sindicato)
+                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_url, sindicato)
             )
             
             if affected > 0:
@@ -460,25 +509,25 @@ def editar_persona(persona_id):
             (persona_id,)
         )
         
-        foto_filename = persona_actual['foto'] if persona_actual else None
+        foto_url = persona_actual['foto'] if persona_actual else None
         
-        # Manejo de nueva foto
+        # Manejo de nueva foto con Cloudinary
         if 'foto' in request.files:
             file = request.files['foto']
             if file and file.filename != '' and allowed_file(file.filename):
-                # Eliminar foto anterior si existe
-                if foto_filename:
-                    try:
-                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], foto_filename))
-                    except FileNotFoundError:
-                        pass
+                print(f"📸 Subiendo nueva foto a Cloudinary...")
                 
-                # Guardar nueva foto
-                filename = secure_filename(f"{cedula}_{file.filename}")
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                foto_filename = filename
-                print(f"📸 Nueva foto guardada: {filename}")
+                # Eliminar foto anterior de Cloudinary si existe
+                if foto_url:
+                    delete_from_cloudinary(foto_url)
+                
+                # Subir nueva foto
+                nueva_foto_url = upload_to_cloudinary(file, cedula)
+                if nueva_foto_url:
+                    foto_url = nueva_foto_url
+                    print(f"✅ Nueva foto subida exitosamente: {foto_url}")
+                else:
+                    flash('Error al subir la nueva foto. Se mantendrá la foto anterior.', 'warning')
         
         try:
             affected = execute_query(
@@ -486,7 +535,7 @@ def editar_persona(persona_id):
                    WHERE id=%s""" if DATABASE_URL else
                 """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=? 
                    WHERE id=?""",
-                (nombres, apellidos, cedula, fecha_emision, cargo, foto_filename, sindicato, persona_id)
+                (nombres, apellidos, cedula, fecha_emision, cargo, foto_url, sindicato, persona_id)
             )
             
             if affected > 0:
@@ -520,7 +569,7 @@ def editar_persona(persona_id):
 @login_required
 def eliminar_persona(persona_id):
     try:
-        # Obtener datos antes de eliminar para borrar la foto
+        # Obtener datos antes de eliminar para borrar la foto de Cloudinary
         persona = execute_query_one(
             "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
             (persona_id,)
@@ -532,19 +581,16 @@ def eliminar_persona(persona_id):
         )
         
         if affected > 0:
-            # Eliminar archivo QR
+            # Eliminar archivo QR local
             try:
                 os.remove(f'static/{persona_id}.png')
             except FileNotFoundError:
                 pass
             
-            # Eliminar foto si existe
+            # Eliminar foto de Cloudinary si existe
             if persona and persona['foto']:
-                try:
-                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], persona['foto']))
-                    print(f"📸 Foto eliminada: {persona['foto']}")
-                except FileNotFoundError:
-                    pass
+                delete_from_cloudinary(persona['foto'])
+                print(f"🗑️ Foto eliminada de Cloudinary")
             
             flash('Trabajador eliminado correctamente', 'success')
         else:
