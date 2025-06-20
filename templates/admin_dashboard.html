@@ -750,18 +750,17 @@
                     <tbody>
                         {% for persona in personas %}
                         <tr>
-                            <td data-label="Foto">
-                                {% if persona.foto_url %}
-                                    <img src="{{ persona.foto_url }}" 
-                                         alt="Foto de {{ persona.nombres }}" 
-                                         class="photo-mini"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="photo-placeholder-mini" style="display: none;">👤</div>
-                                {% else %}
-                                    <div class="photo-placeholder-mini">👤</div>
-                                {% endif %}
-                            </td>
-                            <td data-label="Nombres">{{ persona.nombres }}</td>
+                           <td data-label="Foto">
+    {% if persona.foto %}
+        <img src="{{ persona.foto }}" 
+             alt="Foto de {{ persona.nombres }}" 
+             class="photo-mini"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="photo-placeholder-mini" style="display: none;">👤</div>
+    {% else %}
+        <div class="photo-placeholder-mini">👤</div>
+    {% endif %}
+</td>                            <td data-label="Nombres">{{ persona.nombres }}</td>
                             <td data-label="Apellidos">{{ persona.apellidos }}</td>
                             <td data-label="Cédula">{{ persona.cedula }}</td>
                             <td data-label="Cargo">{{ persona.cargo }}</td>
