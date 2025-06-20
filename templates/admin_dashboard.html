@@ -698,39 +698,39 @@
         <h2 class="section-title">Lista de Trabajadores</h2>
 
         <!-- BARRA DE BÚSQUEDA -->
-        <div class="search-container">
-            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="search-form">
-                <div class="search-input-group">
-                    <input type="text" 
-                           name="search" 
-                           class="search-input" 
-                           placeholder="Buscar por nombre completo o cédula..." 
-                           value="{{ request.args.get('search', '') }}"
-                           autocomplete="off">
-                </div>
-                <div class="search-buttons">
-                    <button type="submit" class="btn-search">
-                        🔍 Buscar
-                    </button>
-                    {% if request.args.get('search') %}
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn-clear">
-                            ✕ Limpiar
-                        </a>
-                    {% endif %}
-                </div>
-            </form>
-            <div class="search-info">
+<div class="search-container">
+    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="search-form">
+        <div class="search-input-group">
+            <input type="text" 
+                   name="busqueda" 
+                   class="search-input" 
+                   placeholder="Buscar por nombre completo o cédula..." 
+                   value="{{ request.args.get('busqueda', '') }}"
+                   autocomplete="off">
+        </div>
+        <div class="search-buttons">
+            <button type="submit" class="btn-search">
+                🔍 Buscar
+            </button>
+            {% if request.args.get('busqueda') %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-clear">
+                    ✕ Limpiar
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>           
                 💡 Puedes buscar por nombre, apellido, nombre completo o número de cédula
             </div>
         </div>
 
         <!-- INFORMACIÓN DE RESULTADOS DE BÚSQUEDA -->
-        {% if request.args.get('search') %}
-            <div class="search-results-info">
-                🔍 Mostrando resultados para: "<strong>{{ request.args.get('search') }}</strong>" 
-                ({{ personas|length }} resultado{{ 's' if personas|length != 1 else '' }} encontrado{{ 's' if personas|length != 1 else '' }})
-            </div>
-        {% endif %}
+{% if request.args.get('busqueda') %}
+    <div class="search-results-info">
+        🔍 Mostrando resultados para: "<strong>{{ request.args.get('busqueda') }}</strong>" 
+        ({{ personas|length }} resultado{{ 's' if personas|length != 1 else '' }} encontrado{{ 's' if personas|length != 1 else '' }})
+    </div>
+{% endif %}
 
         {% if personas %}
             <div class="table-container">

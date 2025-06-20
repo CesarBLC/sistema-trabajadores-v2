@@ -302,74 +302,69 @@ def debug_database():
     except Exception as e:
         print(f"❌ Error en debug: {e}")
 
-# FUNCIÓN DE BÚSQUEDA - CORREGIDA
+# FUNCIÓN DE BÚSQUEDA - VERSIÓN DEBUG TEMPORAL
 def buscar_trabajadores(termino_busqueda):
     """
-    Buscar trabajadores por nombre completo o cédula
-    Retorna lista de trabajadores que coincidan con el término
+    Buscar trabajadores - VERSION DEBUG TEMPORAL
     """
     try:
+        # Debug inicial
+        print(f"🔍 DEBUG - Función llamada con: '{termino_busqueda}'")
+        print(f"🔍 DEBUG - Tipo del parámetro: {type(termino_busqueda)}")
+        
         # Limpiar el término de búsqueda
         termino = termino_busqueda.strip()
         
+        print(f"🔍 DEBUG - Término limpio: '{termino}'")
+        print(f"🔍 DEBUG - Longitud del término: {len(termino)}")
+        print(f"🔍 DEBUG - Término está vacío: {not termino}")
+        
         if not termino:
-            # Si no hay término, devolver lista vacía
-            print("⚠️ Búsqueda vacía - retornando lista vacía")
+            print("🔍 DEBUG - Retornando lista vacía por término vacío")
             return []
         
-        # Extraer solo números del término (para búsqueda por cédula)
-        numeros_termino = ''.join(filter(str.isdigit, termino))
+        # Consulta MUY simple para debug
+        print(f"🔍 DEBUG - DATABASE_URL definido: {DATABASE_URL is not None if 'DATABASE_URL' in globals() else 'Variable no existe'}")
         
         if DATABASE_URL:
-            # PostgreSQL - Búsqueda más sofisticada
-            query = """
-            SELECT * FROM personas 
-            WHERE 
-                LOWER(CONCAT(nombres, ' ', apellidos)) LIKE LOWER(%s)
-                OR LOWER(CONCAT(apellidos, ' ', nombres)) LIKE LOWER(%s)
-                OR LOWER(nombres) LIKE LOWER(%s)
-                OR LOWER(apellidos) LIKE LOWER(%s)
-                OR REGEXP_REPLACE(cedula, '[^0-9]', '', 'g') LIKE %s
-                OR cedula LIKE %s
-            ORDER BY apellidos, nombres
-            """
-            params = (
-                f'%{termino}%',  # nombre apellido
-                f'%{termino}%',  # apellido nombre  
-                f'%{termino}%',  # solo nombre
-                f'%{termino}%',  # solo apellido
-                f'%{numeros_termino}%',  # cédula sin formato
-                f'%{termino}%'   # cédula con formato
-            )
+            # PostgreSQL - versión simple
+            query = "SELECT * FROM personas WHERE LOWER(nombres) LIKE LOWER(%s) OR cedula LIKE %s ORDER BY nombres"
+            params = (f'%{termino}%', f'%{termino}%')
+            print(f"🔍 DEBUG - Usando PostgreSQL")
         else:
-            # SQLite - Búsqueda más simple
-            query = """
-            SELECT * FROM personas 
-            WHERE 
-                LOWER(nombres || ' ' || apellidos) LIKE LOWER(?)
-                OR LOWER(apellidos || ' ' || nombres) LIKE LOWER(?)
-                OR LOWER(nombres) LIKE LOWER(?)
-                OR LOWER(apellidos) LIKE LOWER(?)
-                OR cedula LIKE ?
-            ORDER BY apellidos, nombres
-            """
-            params = (
-                f'%{termino}%',
-                f'%{termino}%', 
-                f'%{termino}%',
-                f'%{termino}%',
-                f'%{termino}%'
-            )
+            # SQLite - versión simple
+            query = "SELECT * FROM personas WHERE LOWER(nombres) LIKE LOWER(?) OR cedula LIKE ? ORDER BY nombres"
+            params = (f'%{termino}%', f'%{termino}%')
+            print(f"🔍 DEBUG - Usando SQLite")
         
+        print(f"🔍 DEBUG - Query: {query}")
+        print(f"🔍 DEBUG - Params: {params}")
+        
+        # Ejecutar query
+        print(f"🔍 DEBUG - Ejecutando query...")
         resultados = execute_query(query, params, fetch=True)
-        print(f"🔍 Búsqueda '{termino}': {len(resultados)} resultados encontrados")
+        
+        print(f"🔍 DEBUG - Query ejecutada. Resultados: {len(resultados)}")
+        
+        # Mostrar algunos resultados
+        if resultados:
+            print(f"🔍 DEBUG - Primeros 2 resultados:")
+            for i, resultado in enumerate(resultados[:2]):
+                try:
+                    r_dict = dict(resultado)
+                    print(f"  {i+1}. {r_dict.get('nombres', 'SIN_NOMBRE')} - {r_dict.get('cedula', 'SIN_CEDULA')}")
+                except Exception as e:
+                    print(f"  {i+1}. Error procesando resultado: {e}")
+        else:
+            print(f"🔍 DEBUG - No se encontraron resultados")
         
         return resultados
         
     except Exception as e:
-        print(f"❌ Error en búsqueda: {e}")
+        print(f"❌ ERROR en búsqueda: {e}")
+        import traceback
+        print(f"❌ Traceback completo: {traceback.format_exc()}")
         return []
-
 # Decorator para rutas protegidas
 def login_required(f):
     @wraps(f)
@@ -487,17 +482,6 @@ def admin_dashboard():
         return render_template('admin_dashboard.html', 
                              personas=[], 
                              termino_busqueda='')
-
-# NUEVA RUTA PARA BÚSQUEDA AJAX (OPCIONAL)
-@app.route('/admin/buscar', methods=['POST'])
-@login_required
-def buscar_trabajadores_ajax():
-    """
-    Ruta para búsqueda mediante AJAX (opcional)
-    Redirige al dashboard con parámetros de búsqueda
-    """
-    termino_busqueda = request.form.get('busqueda', '').strip()
-    return redirect(url_for('admin_dashboard', busqueda=termino_busqueda))
 
 @app.route('/admin/agregar', methods=['GET', 'POST'])
 @login_required
