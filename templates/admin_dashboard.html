@@ -189,6 +189,124 @@
             gap: 10px;
         }
 
+        /* ESTILOS PARA LA BARRA DE BÚSQUEDA */
+        .search-container {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-container:focus-within {
+            border-color: #003DA5;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input-group {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            background: white;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #003DA5;
+            box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #adb5bd;
+            font-weight: 400;
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-search {
+            background: #003DA5;
+            color: white;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-search:hover {
+            background: #002a7a;
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-clear:hover {
+            background: #545b62;
+        }
+
+        .search-info {
+            margin-top: 15px;
+            color: #6c757d;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        /* Indicador de resultados de búsqueda */
+        .search-results-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -223,24 +341,29 @@
             transition: background-color 0.2s ease;
         }
 
-        /* Estilos para foto en tabla */
+        /* Estilos para foto en tabla - MODIFICADO PARA CLOUDINARY */
         .photo-mini {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #e9ecef;
+            transition: transform 0.2s ease;
+        }
+
+        .photo-mini:hover {
+            transform: scale(1.1);
         }
 
         .photo-placeholder-mini {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             color: #adb5bd;
             border: 2px solid #e9ecef;
         }
@@ -381,6 +504,7 @@
             text-align: left;
         }
 
+        /* RESPONSIVE PARA BÚSQUEDA */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -409,6 +533,30 @@
 
             .container {
                 padding: 25px;
+            }
+
+            .search-container {
+                padding: 20px;
+            }
+
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input-group {
+                min-width: auto;
+            }
+
+            .search-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-search,
+            .btn-clear {
+                width: 100%;
+                justify-content: center;
             }
 
             .stats {
@@ -549,6 +697,41 @@
         <!-- Lista de trabajadores -->
         <h2 class="section-title">Lista de Trabajadores</h2>
 
+        <!-- BARRA DE BÚSQUEDA -->
+        <div class="search-container">
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="search-form">
+                <div class="search-input-group">
+                    <input type="text" 
+                           name="search" 
+                           class="search-input" 
+                           placeholder="Buscar por nombre completo o cédula..." 
+                           value="{{ request.args.get('search', '') }}"
+                           autocomplete="off">
+                </div>
+                <div class="search-buttons">
+                    <button type="submit" class="btn-search">
+                        🔍 Buscar
+                    </button>
+                    {% if request.args.get('search') %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn-clear">
+                            ✕ Limpiar
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+            <div class="search-info">
+                💡 Puedes buscar por nombre, apellido, nombre completo o número de cédula
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN DE RESULTADOS DE BÚSQUEDA -->
+        {% if request.args.get('search') %}
+            <div class="search-results-info">
+                🔍 Mostrando resultados para: "<strong>{{ request.args.get('search') }}</strong>" 
+                ({{ personas|length }} resultado{{ 's' if personas|length != 1 else '' }} encontrado{{ 's' if personas|length != 1 else '' }})
+            </div>
+        {% endif %}
+
         {% if personas %}
             <div class="table-container">
                 <table>
@@ -568,9 +751,12 @@
                         {% for persona in personas %}
                         <tr>
                             <td data-label="Foto">
-                                {% if persona.foto %}
-                                    <img src="{{ url_for('static', filename='fotos_trabajadores/' + persona.foto) }}" 
-                                         alt="Foto de {{ persona.nombres }}" class="photo-mini">
+                                {% if persona.foto_url %}
+                                    <img src="{{ persona.foto_url }}" 
+                                         alt="Foto de {{ persona.nombres }}" 
+                                         class="photo-mini"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="photo-placeholder-mini" style="display: none;">👤</div>
                                 {% else %}
                                     <div class="photo-placeholder-mini">👤</div>
                                 {% endif %}
@@ -609,12 +795,21 @@
             </div>
         {% else %}
             <div class="empty-state">
-                <div class="empty-icon">📋</div>
-                <h3>No hay trabajadores registrados</h3>
-                <p>Comienza agregando el primer trabajador al sistema</p>
-                <a href="{{ url_for('agregar_persona') }}" class="btn btn-primary">
-                    + Agregar Primer Trabajador
-                </a>
+                {% if request.args.get('search') %}
+                    <div class="empty-icon">🔍</div>
+                    <h3>No se encontraron resultados</h3>
+                    <p>No hay trabajadores que coincidan con tu búsqueda "<strong>{{ request.args.get('search') }}</strong>"</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                        Ver Todos los Trabajadores
+                    </a>
+                {% else %}
+                    <div class="empty-icon">📋</div>
+                    <h3>No hay trabajadores registrados</h3>
+                    <p>Comienza agregando el primer trabajador al sistema</p>
+                    <a href="{{ url_for('agregar_persona') }}" class="btn btn-primary">
+                        + Agregar Primer Trabajador
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
@@ -627,6 +822,22 @@
                     e.preventDefault();
                 }
             });
+        });
+
+        // Auto-focus en el campo de búsqueda al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput && !searchInput.value) {
+                searchInput.focus();
+            }
+        });
+
+        // Limpiar búsqueda con tecla Escape
+        document.querySelector('.search-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                window.location.href = "{{ url_for('admin_dashboard') }}";
+            }
         });
     </script>
 </body>

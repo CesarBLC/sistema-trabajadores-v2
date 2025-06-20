@@ -302,6 +302,76 @@ def debug_database():
     except Exception as e:
         print(f"❌ Error en debug: {e}")
 
+# FUNCIÓN DE BÚSQUEDA - NUEVA FUNCIONALIDAD
+def buscar_trabajadores(termino_busqueda):
+    """
+    Buscar trabajadores por nombre completo o cédula
+    Retorna lista de trabajadores que coincidan con el término
+    """
+    try:
+        # Limpiar el término de búsqueda
+        termino = termino_busqueda.strip()
+        
+        if not termino:
+            # Si no hay término, devolver todos los trabajadores
+            return execute_query(
+                "SELECT * FROM personas ORDER BY apellidos, nombres",
+                fetch=True
+            )
+        
+        # Extraer solo números del término (para búsqueda por cédula)
+        numeros_termino = ''.join(filter(str.isdigit, termino))
+        
+        if DATABASE_URL:
+            # PostgreSQL - Búsqueda más sofisticada
+            query = """
+            SELECT * FROM personas 
+            WHERE 
+                LOWER(CONCAT(nombres, ' ', apellidos)) LIKE LOWER(%s)
+                OR LOWER(CONCAT(apellidos, ' ', nombres)) LIKE LOWER(%s)
+                OR LOWER(nombres) LIKE LOWER(%s)
+                OR LOWER(apellidos) LIKE LOWER(%s)
+                OR REGEXP_REPLACE(cedula, '[^0-9]', '', 'g') LIKE %s
+                OR cedula LIKE %s
+            ORDER BY apellidos, nombres
+            """
+            params = (
+                f'%{termino}%',  # nombre apellido
+                f'%{termino}%',  # apellido nombre  
+                f'%{termino}%',  # solo nombre
+                f'%{termino}%',  # solo apellido
+                f'%{numeros_termino}%',  # cédula sin formato
+                f'%{termino}%'   # cédula con formato
+            )
+        else:
+            # SQLite - Búsqueda más simple
+            query = """
+            SELECT * FROM personas 
+            WHERE 
+                LOWER(nombres || ' ' || apellidos) LIKE LOWER(?)
+                OR LOWER(apellidos || ' ' || nombres) LIKE LOWER(?)
+                OR LOWER(nombres) LIKE LOWER(?)
+                OR LOWER(apellidos) LIKE LOWER(?)
+                OR cedula LIKE ?
+            ORDER BY apellidos, nombres
+            """
+            params = (
+                f'%{termino}%',
+                f'%{termino}%', 
+                f'%{termino}%',
+                f'%{termino}%',
+                f'%{termino}%'
+            )
+        
+        resultados = execute_query(query, params, fetch=True)
+        print(f"🔍 Búsqueda '{termino}': {len(resultados)} resultados encontrados")
+        
+        return resultados
+        
+    except Exception as e:
+        print(f"❌ Error en búsqueda: {e}")
+        return []
+
 # Decorator para rutas protegidas
 def login_required(f):
     @wraps(f)
@@ -382,11 +452,13 @@ def admin_logout():
 @login_required
 def admin_dashboard():
     try:
-        print("🔍 Cargando dashboard...")
-        personas = execute_query(
-            "SELECT * FROM personas ORDER BY apellidos, nombres",
-            fetch=True
-        )
+        # Obtener término de búsqueda si existe
+        termino_busqueda = request.args.get('busqueda', '').strip()
+        
+        print(f"🔍 Dashboard - Término de búsqueda: '{termino_busqueda}'")
+        
+        # Usar la función de búsqueda
+        personas = buscar_trabajadores(termino_busqueda)
         
         print(f"📊 Personas encontradas: {len(personas)}")
         
@@ -398,14 +470,29 @@ def admin_dashboard():
                 p_dict = dict(persona)
             print(f"  👤 {i+1}. ID: {p_dict.get('id', 'SIN_ID')}, Nombre: {p_dict.get('nombres', 'SIN_NOMBRE')}, Cédula: {p_dict.get('cedula', 'SIN_CEDULA')}")
         
-        return render_template('admin_dashboard.html', personas=personas)
+        return render_template('admin_dashboard.html', 
+                             personas=personas, 
+                             termino_busqueda=termino_busqueda)
         
     except Exception as e:
         print(f"❌ Error cargando dashboard: {e}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
         flash('Error cargando los datos', 'error')
-        return render_template('admin_dashboard.html', personas=[])
+        return render_template('admin_dashboard.html', 
+                             personas=[], 
+                             termino_busqueda='')
+
+# NUEVA RUTA PARA BÚSQUEDA AJAX (OPCIONAL)
+@app.route('/admin/buscar', methods=['POST'])
+@login_required
+def buscar_trabajadores_ajax():
+    """
+    Ruta para búsqueda mediante AJAX (opcional)
+    Redirige al dashboard con parámetros de búsqueda
+    """
+    termino_busqueda = request.form.get('busqueda', '').strip()
+    return redirect(url_for('admin_dashboard', busqueda=termino_busqueda))
 
 @app.route('/admin/agregar', methods=['GET', 'POST'])
 @login_required
