@@ -302,7 +302,7 @@ def debug_database():
     except Exception as e:
         print(f"❌ Error en debug: {e}")
 
-# FUNCIÓN DE BÚSQUEDA - NUEVA FUNCIONALIDAD
+# FUNCIÓN DE BÚSQUEDA - CORREGIDA
 def buscar_trabajadores(termino_busqueda):
     """
     Buscar trabajadores por nombre completo o cédula
@@ -313,11 +313,9 @@ def buscar_trabajadores(termino_busqueda):
         termino = termino_busqueda.strip()
         
         if not termino:
-            # Si no hay término, devolver todos los trabajadores
-            return execute_query(
-                "SELECT * FROM personas ORDER BY apellidos, nombres",
-                fetch=True
-            )
+            # Si no hay término, devolver lista vacía
+            print("⚠️ Búsqueda vacía - retornando lista vacía")
+            return []
         
         # Extraer solo números del término (para búsqueda por cédula)
         numeros_termino = ''.join(filter(str.isdigit, termino))
