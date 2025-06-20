@@ -301,9 +301,9 @@
         <div class="photo-container">
             <div class="photo-frame">
                 {% if persona.foto %}
-                    <img src="{{ url_for('static', filename='fotos_trabajadores/' + persona.foto) }}" 
-                         alt="Foto de {{ persona.nombres }} {{ persona.apellidos }}" 
-                         class="photo">
+                    <img src="{{ persona.foto }}" 
+     alt="Foto de {{ persona.nombres }} {{ persona.apellidos }}" 
+     class="photo">
                 {% else %}
                     <div class="photo-placeholder">
                         👤
