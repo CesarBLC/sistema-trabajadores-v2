@@ -455,8 +455,15 @@ def admin_dashboard():
         
         print(f"🔍 Dashboard - Término de búsqueda: '{termino_busqueda}'")
         
-        # Usar la función de búsqueda
-        personas = buscar_trabajadores(termino_busqueda)
+        # Si hay término de búsqueda, usar búsqueda
+        if termino_busqueda:
+            personas = buscar_trabajadores(termino_busqueda)
+        else:
+            # Si no hay búsqueda, mostrar todos los trabajadores
+            personas = execute_query(
+                "SELECT * FROM personas ORDER BY apellidos, nombres",
+                fetch=True
+            )
         
         print(f"📊 Personas encontradas: {len(personas)}")
         
