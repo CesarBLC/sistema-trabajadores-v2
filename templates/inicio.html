@@ -65,24 +65,14 @@
             max-width: 400px;
         }
 
-        .logo-side {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
+        .logo {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
             object-fit: contain;
             background: white;
-            padding: 2px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo-center {
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            object-fit: contain;
-            background: white;
-            padding: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
         }
 
         h1 {
@@ -236,14 +226,9 @@
                 gap: 15px;
             }
 
-            .logo-side {
-                width: 40px;
-                height: 40px;
-            }
-
-            .logo-center {
-                width: 65px;
-                height: 65px;
+            .logo {
+                width: 55px;
+                height: 55px;
             }
 
             .venezuela-accent {
@@ -271,9 +256,9 @@
 
         <!-- Contenedor de los tres logos -->
         <div class="logos-container">
-            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo 1" class="logo-side">
-            <img src="{{ url_for('static', filename='images/logo_central.png') }}" alt="Logo Central" class="logo-center">
-            <img src="{{ url_for('static', filename='images/logo2.png') }}" alt="Logo 2" class="logo-side">
+            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo 1" class="logo">
+            <img src="{{ url_for('static', filename='images/logo_central.png') }}" alt="Logo Central" class="logo">
+            <img src="{{ url_for('static', filename='images/logo2.png') }}" alt="Logo 2" class="logo">
         </div>
 
         <h1>Verificación de Trabajadores</h1>
