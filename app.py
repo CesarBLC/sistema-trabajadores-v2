@@ -13,6 +13,14 @@ from werkzeug.utils import secure_filename
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from datetime import datetime
+
 
 app = Flask(__name__)
 app.secret_key = '10000'  # Cambia esto por una clave segura
@@ -801,6 +809,125 @@ def generar_pdf(persona_id):
         return send_file(buffer, as_attachment=True, download_name=f"{p['nombres']}_{p['apellidos']}.pdf", mimetype='application/pdf')
     except Exception as e:
         return f"Error generando PDF: {str(e)}", 500
+
+# Nueva ruta para generar PDF con todos los trabajadores
+@app.route('/admin/pdf_todos')
+@login_required
+def generar_pdf_todos():
+    try:
+        # Obtener todos los trabajadores
+        personas = execute_query(
+            "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato FROM personas ORDER BY apellidos, nombres",
+            fetch=True
+        )
+        
+        if not personas:
+            flash('No hay trabajadores registrados para generar el PDF', 'warning')
+            return redirect(url_for('admin_dashboard'))
+        
+        # Crear el PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, 
+                              pagesize=A4,
+                              topMargin=0.5*inch,
+                              bottomMargin=0.5*inch,
+                              leftMargin=0.5*inch,
+                              rightMargin=0.5*inch)
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            textColor=colors.darkblue
+        )
+        
+        # Contenido del PDF
+        story = []
+        
+        # Título
+        titulo = Paragraph("LISTADO COMPLETO DE TRABAJADORES", title_style)
+        story.append(titulo)
+        
+        # Información del reporte
+        fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
+        fecha_para = Paragraph(f"Generado el: {fecha_actual}", styles['Normal'])
+        story.append(fecha_para)
+        story.append(Spacer(1, 20))
+        
+        # Total de trabajadores
+        total_trabajadores = Paragraph(f"Total de trabajadores: {len(personas)}", styles['Heading3'])
+        story.append(total_trabajadores)
+        story.append(Spacer(1, 20))
+        
+        # Crear tabla con los datos
+        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Sindicato', 'Fecha Emisión']]
+        
+        # Agregar datos de trabajadores
+        for i, persona in enumerate(personas, 1):
+            # Convertir a dict según el tipo de base de datos
+            if DATABASE_URL:
+                p = dict(persona)
+            else:
+                p = dict(persona)
+            
+            nombre_completo = f"{p['nombres']} {p['apellidos']}"
+            fecha_emision = p['fecha_emision'].strftime("%d/%m/%Y") if p['fecha_emision'] else "N/A"
+            sindicato = p.get('sindicato', 'No asignado') or 'No asignado'
+            
+            data.append([
+                str(i),
+                nombre_completo,
+                p['cedula'],
+                p['cargo'],
+                sindicato,
+                fecha_emision
+            ])
+        
+        # Crear y estilizar la tabla
+        table = Table(data, colWidths=[0.4*inch, 2.2*inch, 1.1*inch, 1.8*inch, 0.8*inch, 1.0*inch])
+        table.setStyle(TableStyle([
+            # Estilo del encabezado
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            
+            # Estilo del contenido
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            
+            # Alternar colores de filas
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+        ]))
+        
+        story.append(table)
+        
+        # Construir el PDF
+        doc.build(story)
+        
+        # Preparar respuesta
+        buffer.seek(0)
+        fecha_archivo = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"todos_trabajadores_{fecha_archivo}.pdf"
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        print(f"❌ Error al generar PDF: {e}")
+        flash(f'Error al generar el PDF: {str(e)}', 'error')
+        return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     # Inicializar pool de conexiones

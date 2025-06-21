@@ -138,6 +138,15 @@
             background: #545b62;
         }
 
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
         .container {
             background: white;
             padding: 40px;
@@ -177,6 +186,65 @@
             font-size: 15px;
             color: #6c757d;
             font-weight: 500;
+        }
+
+        /* Estilos para la tarjeta especial del botón PDF */
+        .stat-card-action {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: 2px solid #28a745;
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            border-color: #1e7e34;
+        }
+
+        .stat-card-action::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #28a745, #20c997, #17a2b8, #28a745);
+            border-radius: 12px;
+            z-index: -1;
+            animation: gradient-border 3s ease infinite;
+        }
+
+        @keyframes gradient-border {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .stat-card-action .stat-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .stat-card-action .stat-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .stat-card-action .stat-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: 400;
         }
 
         .section-title {
@@ -692,45 +760,51 @@
                 <div class="stat-number">8</div>
                 <div class="stat-label">PDFs Generados</div>
             </div>
+            <!-- NUEVO BOTÓN PDF TODOS LOS TRABAJADORES -->
+            <a href="{{ url_for('generar_pdf_todos') }}" class="stat-card stat-card-action">
+                <div class="stat-icon">📄</div>
+                <div class="stat-title">Generar PDF</div>
+                <div class="stat-subtitle">Todos los Trabajadores</div>
+            </a>
         </div>
 
         <!-- Lista de trabajadores -->
         <h2 class="section-title">Lista de Trabajadores</h2>
 
         <!-- BARRA DE BÚSQUEDA -->
-<div class="search-container">
-    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="search-form">
-        <div class="search-input-group">
-            <input type="text" 
-                   name="busqueda" 
-                   class="search-input" 
-                   placeholder="Buscar por nombre completo o cédula..." 
-                   value="{{ request.args.get('busqueda', '') }}"
-                   autocomplete="off">
-        </div>
-        <div class="search-buttons">
-            <button type="submit" class="btn-search">
-                🔍 Buscar
-            </button>
-            {% if request.args.get('busqueda') %}
-                <a href="{{ url_for('admin_dashboard') }}" class="btn-clear">
-                    ✕ Limpiar
-                </a>
-            {% endif %}
-        </div>
-    </form>
-</div>           
-                💡 Puedes buscar por nombre, apellido, nombre completo o número de cédula
+        <div class="search-container">
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" class="search-form">
+                <div class="search-input-group">
+                    <input type="text" 
+                           name="busqueda" 
+                           class="search-input" 
+                           placeholder="Buscar por nombre o cédula..." 
+                           value="{{ request.args.get('busqueda', '') }}"
+                           autocomplete="off">
+                </div>
+                <div class="search-buttons">
+                    <button type="submit" class="btn-search">
+                        🔍 Buscar
+                    </button>
+                    {% if request.args.get('busqueda') %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn-clear">
+                            ✕ Limpiar
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+            <div class="search-info">
+                💡 Puedes buscar por nombre o cédula.
             </div>
         </div>
 
         <!-- INFORMACIÓN DE RESULTADOS DE BÚSQUEDA -->
-{% if request.args.get('busqueda') %}
-    <div class="search-results-info">
-        🔍 Mostrando resultados para: "<strong>{{ request.args.get('busqueda') }}</strong>" 
-        ({{ personas|length }} resultado{{ 's' if personas|length != 1 else '' }} encontrado{{ 's' if personas|length != 1 else '' }})
-    </div>
-{% endif %}
+        {% if request.args.get('busqueda') %}
+            <div class="search-results-info">
+                🔍 Mostrando resultados para: "<strong>{{ request.args.get('busqueda') }}</strong>" 
+                ({{ personas|length }} resultado{{ 's' if personas|length != 1 else '' }} encontrado{{ 's' if personas|length != 1 else '' }})
+            </div>
+        {% endif %}
 
         {% if personas %}
             <div class="table-container">
@@ -751,16 +825,17 @@
                         {% for persona in personas %}
                         <tr>
                            <td data-label="Foto">
-    {% if persona.foto %}
-        <img src="{{ persona.foto }}" 
-             alt="Foto de {{ persona.nombres }}" 
-             class="photo-mini"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="photo-placeholder-mini" style="display: none;">👤</div>
-    {% else %}
-        <div class="photo-placeholder-mini">👤</div>
-    {% endif %}
-</td>                            <td data-label="Nombres">{{ persona.nombres }}</td>
+                                {% if persona.foto %}
+                                    <img src="{{ persona.foto }}" 
+                                         alt="Foto de {{ persona.nombres }}" 
+                                         class="photo-mini"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="photo-placeholder-mini" style="display: none;">👤</div>
+                                {% else %}
+                                    <div class="photo-placeholder-mini">👤</div>
+                                {% endif %}
+                            </td>
+                            <td data-label="Nombres">{{ persona.nombres }}</td>
                             <td data-label="Apellidos">{{ persona.apellidos }}</td>
                             <td data-label="Cédula">{{ persona.cedula }}</td>
                             <td data-label="Cargo">{{ persona.cargo }}</td>
