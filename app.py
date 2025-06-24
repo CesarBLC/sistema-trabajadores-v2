@@ -121,7 +121,10 @@ def crear_tabla_si_no_existe():
             fecha_emision DATE NOT NULL,
             cargo VARCHAR(100) NOT NULL,
             foto TEXT,
-            sindicato VARCHAR(100)
+            sindicato VARCHAR(100),
+            telefono VARCHAR(15),
+            region VARCHAR(100),
+            oficio VARCHAR(100)
         )
         """
         
@@ -143,7 +146,7 @@ def actualizar_base_datos():
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
-            WHERE table_name = 'personas' AND column_name IN ('foto', 'sindicato')
+            WHERE table_name = 'personas' AND column_name IN ('foto', 'sindicato', 'telefono', 'region', 'oficio')
         """)
         
         existing_columns = [row[0] for row in cursor.fetchall()]
@@ -153,6 +156,15 @@ def actualizar_base_datos():
             
         if 'sindicato' not in existing_columns:
             cursor.execute("ALTER TABLE personas ADD COLUMN sindicato VARCHAR(100);")
+            
+        if 'telefono' not in existing_columns:
+            cursor.execute("ALTER TABLE personas ADD COLUMN telefono VARCHAR(15);")
+            
+        if 'region' not in existing_columns:
+            cursor.execute("ALTER TABLE personas ADD COLUMN region VARCHAR(100);")
+            
+        if 'oficio' not in existing_columns:
+            cursor.execute("ALTER TABLE personas ADD COLUMN oficio VARCHAR(100);")
         
         conn.commit()
         cursor.close()
@@ -329,9 +341,17 @@ def agregar_persona():
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
         unidad = request.form['unidad'].strip()
+        telefono = request.form['telefono'].strip()
+        region = request.form['region'].strip()
+        oficio = request.form['oficio'].strip()
+
+        # Validación de teléfono (solo números)
+        if telefono and not telefono.isdigit():
+            flash('El teléfono solo puede contener números', 'error')
+            return render_template('agregar_persona.html', unidades=UNIDADES)
 
         if not all([nombres, apellidos, cedula, fecha_emision, cargo, unidad]):
-            flash('Todos los campos son obligatorios', 'error')
+            flash('Los campos nombres, apellidos, cédula, fecha de emisión, cargo y unidad son obligatorios', 'error')
             return render_template('agregar_persona.html', unidades=UNIDADES)
 
         foto_url = None
@@ -350,16 +370,16 @@ def agregar_persona():
             
             if existing:
                 flash('Ya existe un trabajador con esa cédula', 'error')
-                return render_template('agregar_persona.html', sindicatos=SINDICATOS)
+                return render_template('agregar_persona.html', unidades=UNIDADES)
 
             persona_id = str(uuid.uuid4())
 
             affected = execute_query(
-    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
-       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
-    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-    (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad)
+    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato, telefono, region, oficio) 
+       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
+    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato, telefono, region, oficio) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+    (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad, telefono, region, oficio)
 )            
             if affected > 0:
                 qr_data = url_for('ver_perfil_publico', cedula=cedula, _external=True)
@@ -378,10 +398,10 @@ def agregar_persona():
                 return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id, unidades=UNIDADES)
             else:
                 flash('Error al guardar el trabajador. Intente nuevamente.', 'error')
-                return render_template('agregar_persona.html', sindicatos=SINDICATOS)
+                return render_template('agregar_persona.html', unidades=UNIDADES)
         except Exception as e:
             flash(f'Error en la base de datos: {str(e)}', 'error')
-            return render_template('agregar_persona.html', sindicatos=SINDICATOS)
+            return render_template('agregar_persona.html', unidades=UNIDADES)
 
     return render_template('agregar_persona.html', unidades=UNIDADES)
 
@@ -395,6 +415,18 @@ def editar_persona(persona_id):
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
         unidad = request.form['unidad'].strip()
+        telefono = request.form['telefono'].strip()
+        region = request.form['region'].strip()
+        oficio = request.form['oficio'].strip()
+        
+        # Validación de teléfono (solo números)
+        if telefono and not telefono.isdigit():
+            flash('El teléfono solo puede contener números', 'error')
+            persona = execute_query_one(
+                "SELECT * FROM personas WHERE id = %s" if DATABASE_URL else "SELECT * FROM personas WHERE id = ?",
+                (persona_id,)
+            )
+            return render_template('editar_persona.html', p=persona, unidades=UNIDADES)
         
         persona_actual = execute_query_one(
             "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
@@ -417,11 +449,11 @@ def editar_persona(persona_id):
         
         try:
             affected = execute_query(
-    """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s, foto=%s, sindicato=%s 
+    """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s, foto=%s, sindicato=%s, telefono=%s, region=%s, oficio=%s 
        WHERE id=%s""" if DATABASE_URL else
-    """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=? 
+    """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=?, telefono=?, region=?, oficio=? 
        WHERE id=?""",
-    (nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad, persona_id)
+    (nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad, telefono, region, oficio, persona_id)
 )
             
             if affected > 0:
@@ -476,7 +508,7 @@ def eliminar_persona(persona_id):
         else:
             flash('No se encontró el trabajador para eliminar', 'error')
     except Exception as e:
-        flash(f'Error al eliminar: {str(e)}', 'error')
+        flash(f'Error al elimizar: {str(e)}', 'error')
     
     return redirect(url_for('admin_dashboard'))
 
@@ -501,7 +533,10 @@ def admin_ver_perfil(persona_id):
                     'fecha_emision': persona[4],
                     'cargo': persona[5],
                     'foto': persona[6] if len(persona) > 6 else None,
-                    'sindicato': persona[7] if len(persona) > 7 else None
+                    'sindicato': persona[7] if len(persona) > 7 else None,
+                    'telefono': persona[8] if len(persona) > 8 else None,
+                    'region': persona[9] if len(persona) > 9 else None,
+                    'oficio': persona[10] if len(persona) > 10 else None
                 }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
@@ -531,7 +566,10 @@ def ver_perfil_publico(cedula):
                     'fecha_emision': persona[4],
                     'cargo': persona[5],
                     'foto': persona[6] if len(persona) > 6 else None,
-                    'sindicato': persona[7] if len(persona) > 7 else None
+                    'sindicato': persona[7] if len(persona) > 7 else None,
+                    'telefono': persona[8] if len(persona) > 8 else None,
+                    'region': persona[9] if len(persona) > 9 else None,
+                    'oficio': persona[10] if len(persona) > 10 else None
                 }
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
@@ -580,7 +618,10 @@ def generar_pdf(persona_id):
                 'fecha_emision': persona[4],
                 'cargo': persona[5],
                 'foto': persona[6] if len(persona) > 6 else None,
-                'sindicato': persona[7] if len(persona) > 7 else None
+                'sindicato': persona[7] if len(persona) > 7 else None,
+                'telefono': persona[8] if len(persona) > 8 else None,
+                'region': persona[9] if len(persona) > 9 else None,
+                'oficio': persona[10] if len(persona) > 10 else None
             }
 
         buffer = BytesIO()
@@ -590,6 +631,9 @@ def generar_pdf(persona_id):
         pdf.drawString(100, 710, f"Fecha de Emisión: {p['fecha_emision']}")
         pdf.drawString(100, 690, f"Cargo: {p['cargo']}")
         pdf.drawString(100, 670, f"Sindicato: {p.get('sindicato', 'No asignado')}")
+        pdf.drawString(100, 650, f"Teléfono: {p.get('telefono', 'No registrado')}")
+        pdf.drawString(100, 630, f"Región: {p.get('region', 'No registrada')}")
+        pdf.drawString(100, 610, f"Oficio: {p.get('oficio', 'No registrado')}")
         pdf.showPage()
         pdf.save()
         buffer.seek(0)
@@ -603,7 +647,7 @@ def generar_pdf(persona_id):
 def generar_pdf_todos():
     try:
         personas = execute_query(
-            "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato FROM personas ORDER BY apellidos, nombres",
+            "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato, telefono, region, oficio FROM personas ORDER BY apellidos, nombres",
             fetch=True
         )
         
@@ -643,7 +687,7 @@ def generar_pdf_todos():
         story.append(total_trabajadores)
         story.append(Spacer(1, 20))
         
-        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Unidad', 'Fecha Emisión']]
+        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Unidad', 'Teléfono', 'Región', 'Oficio', 'Fecha Emisión']]
         
         for i, persona in enumerate(personas, 1):
             if DATABASE_URL:
@@ -654,6 +698,9 @@ def generar_pdf_todos():
             nombre_completo = f"{p['nombres']} {p['apellidos']}"
             fecha_emision = p['fecha_emision'].strftime("%d/%m/%Y") if p['fecha_emision'] else "N/A"
             sindicato = p.get('sindicato', 'No asignado') or 'No asignado'
+            telefono = p.get('telefono', 'No registrado') or 'No registrado'
+            region = p.get('region', 'No registrada') or 'No registrada'
+            oficio = p.get('oficio', 'No registrado') or 'No registrado'
             
             data.append([
                 str(i),
@@ -661,18 +708,21 @@ def generar_pdf_todos():
                 p['cedula'],
                 p['cargo'],
                 sindicato,
+                telefono,
+                region,
+                oficio,
                 fecha_emision
             ])
         
-        table = Table(data, colWidths=[0.4*inch, 2.2*inch, 1.1*inch, 1.8*inch, 0.8*inch, 1.0*inch])
+        table = Table(data, colWidths=[0.3*inch, 1.8*inch, 0.9*inch, 1.4*inch, 0.7*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),

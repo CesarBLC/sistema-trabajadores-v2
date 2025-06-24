@@ -813,6 +813,9 @@
     <th>Apellidos</th>
     <th>Cédula</th>
     <th>Cargo</th>
+    <th>Teléfono</th>
+    <th>Región</th>
+    <th>Oficio</th>
     <th>Unidad</th>
     <th>Fecha Emisión</th>
     <th>Acciones</th>
@@ -831,12 +834,14 @@
                                 {% else %}
                                     <div class="photo-placeholder-mini">👤</div>
                                 {% endif %}
-                            </td>
-                            <td data-label="Nombres">{{ persona.nombres }}</td>
-                            <td data-label="Apellidos">{{ persona.apellidos }}</td>
-                            <td data-label="Cédula">{{ persona.cedula }}</td>
-                            <td data-label="Cargo">{{ persona.cargo }}</td>
-                           <td data-label="Unidad">
+                           <td data-label="Nombres">{{ persona.nombres }}</td>
+<td data-label="Apellidos">{{ persona.apellidos }}</td>
+<td data-label="Cédula">{{ persona.cedula }}</td>
+<td data-label="Cargo">{{ persona.cargo }}</td>
+<td data-label="Teléfono">{{ persona.telefono if persona.telefono else 'No especificado' }}</td>
+<td data-label="Región">{{ persona.region if persona.region else 'No especificada' }}</td>
+<td data-label="Oficio">{{ persona.oficio if persona.oficio else 'No especificado' }}</td>
+<td data-label="Unidad">
     {% if persona.sindicato %}
         <span class="unidad-badge {% if persona.sindicato == 'Construcción' %}unidad-construccion{% elif persona.sindicato == 'Cemento' %}unidad-cemento{% else %}unidad-none{% endif %}">
             {{ persona.sindicato }}

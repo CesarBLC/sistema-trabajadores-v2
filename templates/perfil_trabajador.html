@@ -345,12 +345,33 @@
                 <div class="info-value">{{ persona.cedula }}</div>
             </div>
             
-           {% if persona.sindicato %}
+          {% if persona.telefono %}
+<div class="info-item">
+    <div class="info-label">Teléfono:</div>
+    <div class="info-value">{{ persona.telefono }}</div>
+</div>
+{% endif %}
+
+{% if persona.region %}
+<div class="info-item">
+    <div class="info-label">Región:</div>
+    <div class="info-value">{{ persona.region }}</div>
+</div>
+{% endif %}
+
+{% if persona.oficio %}
+<div class="info-item">
+    <div class="info-label">Oficio:</div>
+    <div class="info-value">{{ persona.oficio }}</div>
+</div>
+{% endif %}
+
+{% if persona.sindicato %}
 <div class="info-item">
     <div class="info-label">Unidad:</div>
     <div class="info-value">{{ persona.sindicato }}</div>
 </div>
-{% endif %}            
+{% endif %}      
             <div class="info-item">
                 <div class="info-label">F/ Emisión:</div>
                 <div class="info-value">{{ persona.fecha_emision }}</div>
