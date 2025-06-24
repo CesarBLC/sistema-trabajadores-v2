@@ -838,7 +838,7 @@
                             <td data-label="Cargo">{{ persona.cargo }}</td>
                            <td data-label="Unidad">
     {% if persona.sindicato %}
-        <span class="unidad-badge unidad-{{ persona.sindicato.lower() }}">
+        <span class="unidad-badge {% if persona.sindicato == 'Construcción' %}unidad-construccion{% elif persona.sindicato == 'Cemento' %}unidad-cemento{% else %}unidad-none{% endif %}">
             {{ persona.sindicato }}
         </span>
     {% else %}
