@@ -28,7 +28,7 @@ app.secret_key = '10000'
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin123"
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
+UNIDADES = ['Construcción', 'Cemento']
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -328,11 +328,11 @@ def agregar_persona():
         cedula = request.form['cedula'].strip()
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
-        sindicato = request.form['sindicato'].strip()
+        unidad = request.form['unidad'].strip()
 
-        if not all([nombres, apellidos, cedula, fecha_emision, cargo, sindicato]):
+        if not all([nombres, apellidos, cedula, fecha_emision, cargo, unidad]):
             flash('Todos los campos son obligatorios', 'error')
-            return render_template('agregar_persona.html', sindicatos=SINDICATOS)
+            return render_template('agregar_persona.html', unidades=UNIDADES)
 
         foto_url = None
         if 'foto' in request.files:
@@ -355,13 +355,12 @@ def agregar_persona():
             persona_id = str(uuid.uuid4())
 
             affected = execute_query(
-                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
-                """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_url, sindicato)
-            )
-            
+    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
+       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
+    """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+    (persona_id, nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad)
+)            
             if affected > 0:
                 qr_data = url_for('ver_perfil_publico', cedula=cedula, _external=True)
                 qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -376,7 +375,7 @@ def agregar_persona():
                 qr_url = '/' + qr_path
                 
                 flash('Trabajador agregado exitosamente', 'success')
-                return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id, sindicatos=SINDICATOS)
+                return render_template('agregar_persona.html', qr_url=qr_url, persona_id=persona_id, unidades=UNIDADES)
             else:
                 flash('Error al guardar el trabajador. Intente nuevamente.', 'error')
                 return render_template('agregar_persona.html', sindicatos=SINDICATOS)
@@ -384,7 +383,7 @@ def agregar_persona():
             flash(f'Error en la base de datos: {str(e)}', 'error')
             return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
-    return render_template('agregar_persona.html', sindicatos=SINDICATOS)
+    return render_template('agregar_persona.html', unidades=UNIDADES)
 
 @app.route('/admin/editar/<persona_id>', methods=['GET', 'POST'])
 @login_required
@@ -395,7 +394,7 @@ def editar_persona(persona_id):
         cedula = request.form['cedula'].strip()
         fecha_emision = request.form['fecha_emision'].strip()
         cargo = request.form['cargo'].strip()
-        sindicato = request.form['sindicato'].strip()
+        unidad = request.form['unidad'].strip()
         
         persona_actual = execute_query_one(
             "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
@@ -418,12 +417,12 @@ def editar_persona(persona_id):
         
         try:
             affected = execute_query(
-                """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s, foto=%s, sindicato=%s 
-                   WHERE id=%s""" if DATABASE_URL else
-                """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=? 
-                   WHERE id=?""",
-                (nombres, apellidos, cedula, fecha_emision, cargo, foto_url, sindicato, persona_id)
-            )
+    """UPDATE personas SET nombres=%s, apellidos=%s, cedula=%s, fecha_emision=%s, cargo=%s, foto=%s, sindicato=%s 
+       WHERE id=%s""" if DATABASE_URL else
+    """UPDATE personas SET nombres=?, apellidos=?, cedula=?, fecha_emision=?, cargo=?, foto=?, sindicato=? 
+       WHERE id=?""",
+    (nombres, apellidos, cedula, fecha_emision, cargo, foto_url, unidad, persona_id)
+)
             
             if affected > 0:
                 flash('Datos actualizados correctamente', 'success')
@@ -442,7 +441,7 @@ def editar_persona(persona_id):
             )
             
             if persona:
-                return render_template('editar_persona.html', p=persona, sindicatos=SINDICATOS)
+               return render_template('editar_persona.html', p=persona, unidades=UNIDADES)
             else:
                 flash('Trabajador no encontrado', 'error')
                 return redirect(url_for('admin_dashboard'))

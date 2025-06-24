@@ -317,18 +317,17 @@
             {{ persona.nombres }} {{ persona.apellidos }}
         </div>
 
-        <!-- Badge del cargo y sindicato -->
-        <div class="cargo-container">
-            <div class="cargo-badge">
-                {{ persona.cargo }}
-            </div>
-            {% if persona.sindicato %}
-                <div class="sindicato-badge">
-                    {{ persona.sindicato }}
-                </div>
-            {% endif %}
+       <!-- Badge del cargo y unidad -->
+<div class="cargo-container">
+    <div class="cargo-badge">
+        {{ persona.cargo }}
+    </div>
+    {% if persona.sindicato %}
+        <div class="unidad-badge">
+            {{ persona.sindicato }}
         </div>
-
+    {% endif %}
+</div>
         <!-- Información del trabajador -->
         <div class="info-section">
             <div class="info-item">
@@ -346,13 +345,12 @@
                 <div class="info-value">{{ persona.cedula }}</div>
             </div>
             
-            {% if persona.sindicato %}
-            <div class="info-item">
-                <div class="info-label">Sindicato:</div>
-                <div class="info-value">{{ persona.sindicato }}</div>
-            </div>
-            {% endif %}
-            
+           {% if persona.sindicato %}
+<div class="info-item">
+    <div class="info-label">Unidad:</div>
+    <div class="info-value">{{ persona.sindicato }}</div>
+</div>
+{% endif %}            
             <div class="info-item">
                 <div class="info-label">F/ Emisión:</div>
                 <div class="info-value">{{ persona.fecha_emision }}</div>

@@ -810,16 +810,16 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Foto</th>
-                            <th>Nombres</th>
-                            <th>Apellidos</th>
-                            <th>Cédula</th>
-                            <th>Cargo</th>
-                            <th>Sindicato</th>
-                            <th>Fecha Emisión</th>
-                            <th>Acciones</th>
-                        </tr>
+                       <tr>
+    <th>Foto</th>
+    <th>Nombres</th>
+    <th>Apellidos</th>
+    <th>Cédula</th>
+    <th>Cargo</th>
+    <th>Unidad</th>
+    <th>Fecha Emisión</th>
+    <th>Acciones</th>
+</tr>
                     </thead>
                     <tbody>
                         {% for persona in personas %}
@@ -839,15 +839,15 @@
                             <td data-label="Apellidos">{{ persona.apellidos }}</td>
                             <td data-label="Cédula">{{ persona.cedula }}</td>
                             <td data-label="Cargo">{{ persona.cargo }}</td>
-                            <td data-label="Sindicato">
-                                {% if persona.sindicato %}
-                                    <span class="sindicato-badge sindicato-{{ persona.sindicato.lower() }}">
-                                        {{ persona.sindicato }}
-                                    </span>
-                                {% else %}
-                                    <span class="sindicato-badge sindicato-none">Sin asignar</span>
-                                {% endif %}
-                            </td>
+                           <td data-label="Unidad">
+    {% if persona.sindicato %}
+        <span class="unidad-badge unidad-{{ persona.sindicato.lower() }}">
+            {{ persona.sindicato }}
+        </span>
+    {% else %}
+        <span class="unidad-badge unidad-none">Sin asignar</span>
+    {% endif %}
+</td>
                             <td data-label="Fecha Emisión">{{ persona.fecha_emision }}</td>
                             <td data-label="Acciones">
                                 <div class="actions">
