@@ -70,17 +70,21 @@
             gap: 20px;
         }
 
-        .logo {
-            width: 60px;
-            height: 60px;
-            background: #003DA5;
-            border-radius: 12px;
+        /* Contenedor del logo - adaptado del diseño de la página de inicio */
+        .logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
+        }
+
+        .logo-central {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: white;
+            padding: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
         }
 
         h1 {
@@ -655,6 +659,11 @@
                 top: 15px;
                 right: 15px;
             }
+
+            .logo-central {
+                width: 50px;
+                height: 50px;
+            }
         }
 
         /* Tabla responsive mejorada */
@@ -710,7 +719,10 @@
         </div>
 
         <div class="header-left">
-            <div class="logo">ADM</div>
+            <!-- Logo central reemplazando el texto ADM -->
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logo_central.png') }}" alt="Logo Central" class="logo-central">
+            </div>
             <div>
                 <div class="membrete">
                     Panel Administrativo - Sistema de Gestión<br>

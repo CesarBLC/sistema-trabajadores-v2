@@ -75,20 +75,26 @@
             margin-right: auto;
         }
 
-        .logo {
-            width: 70px;
-            height: 70px;
-            background: #003DA5;
-            border-radius: 12px;
-            margin: 0 auto 25px;
+        /* Contenedor del logo central */
+        .logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
+            margin: 0 auto 25px;
         }
 
+        .logo-central {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: white;
+            padding: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+            
+        }
+
+       
         h1 {
             color: #003DA5;
             margin-bottom: 12px;
@@ -236,10 +242,9 @@
                 font-size: 24px;
             }
 
-            .logo {
+            .logo-central {
                 width: 60px;
                 height: 60px;
-                font-size: 20px;
             }
 
             .venezuela-accent {
@@ -249,13 +254,7 @@
         }
 
         /* Pequeña animación sutil para el logo */
-        .logo {
-            transition: transform 0.3s ease;
-        }
-
-        .logo:hover {
-            transform: scale(1.05);
-        }
+        /* Ya incluida en .logo-central */
 
         /* Efecto focus sutil */
         input:focus {
@@ -278,7 +277,10 @@
             Industria de la Construcción y Similares
         </div>
 
-        <div class="logo">ADM</div>
+        <!-- Logo central único -->
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo_central.png') }}" alt="Logo Central" class="logo-central">
+        </div>
         
         <div class="admin-badge">Área Restringida</div>
         
