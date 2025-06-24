@@ -436,31 +436,51 @@
             border: 2px solid #e9ecef;
         }
 
-        /* Estilos para sindicato */
+        /* ESTILOS ACTUALIZADOS PARA UNIDADES CON COLORES RESALTANTES */
         .unidad-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-
-        
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
         }
 
+        /* Unidad Cemento - Tono púrpura/violeta resaltante */
         .unidad-cemento {
-            background: #f3e5f5;
-            color: #7b1fa2;
+            background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
+            color: white;
+            border-color: #7b1fa2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
+        .unidad-cemento:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(142, 36, 170, 0.3);
+        }
+
+        /* Unidad Construcción - Tono verde resaltante */
         .unidad-construccion {
-            background: #e8f5e8;
-            color: #388e3c;
+            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+            color: white;
+            border-color: #388e3c;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
+        .unidad-construccion:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(67, 160, 71, 0.3);
+        }
+
+        /* Sin asignar - Estilo neutro */
         .unidad-none {
             background: #f5f5f5;
             color: #757575;
+            border-color: #e0e0e0;
         }
 
         .actions {
