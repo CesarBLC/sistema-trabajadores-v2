@@ -21,39 +21,42 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from datetime import datetime
 
-
 app = Flask(__name__)
-app.secret_key = '10000'  # Cambia esto por una clave segura
+app.secret_key = '10000'
 
-# Credenciales de administrador (cámbialas por las tuyas)
+# Configuraciones
 ADMIN_USER = "admin"
 ADMIN_PASS = "admin123"
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# CONFIGURACIÓN DE CLOUDINARY
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# Configuración Cloudinary
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
     api_secret=os.environ.get('CLOUDINARY_API_SECRET')
 )
 
-# CONFIGURACIÓN PARA SUBIDA DE ARCHIVOS
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+# Pool de conexiones
+connection_pool = None
 
-# SINDICATOS PREDETERMINADOS
-SINDICATOS = ['UBT', 'CBST', 'FUNTTBCCAC']
+def init_connection_pool():
+    global connection_pool
+    if DATABASE_URL and not connection_pool:
+        try:
+            connection_pool = psycopg2.pool.SimpleConnectionPool(1, 20, DATABASE_URL)
+        except Exception as e:
+            connection_pool = None
 
 def allowed_file(filename):
-    """Verificar si el archivo tiene una extensión permitida"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def upload_to_cloudinary(file, cedula):
-    """Subir archivo a Cloudinary y retornar la URL"""
     try:
-        # Crear un public_id único basado en la cédula
         public_id = f"trabajadores/{cedula}_{uuid.uuid4().hex[:8]}"
-        
-        # Configurar opciones de transformación para optimizar la imagen
         upload_result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
@@ -65,87 +68,50 @@ def upload_to_cloudinary(file, cedula):
             overwrite=True,
             invalidate=True
         )
-        
-        print(f"✅ Imagen subida a Cloudinary: {upload_result['secure_url']}")
         return upload_result['secure_url']
-        
     except Exception as e:
-        print(f"❌ Error subiendo a Cloudinary: {e}")
         return None
 
 def delete_from_cloudinary(foto_url):
-    """Eliminar imagen de Cloudinary usando la URL"""
     try:
         if foto_url and 'cloudinary.com' in foto_url:
-            # Extraer public_id de la URL
             parts = foto_url.split('/')
             if 'trabajadores' in parts:
                 public_id_with_ext = parts[parts.index('trabajadores') + 1]
-                public_id = public_id_with_ext.split('.')[0]  # Remover extensión
+                public_id = public_id_with_ext.split('.')[0]
                 full_public_id = f"trabajadores/{public_id}"
-                
                 result = cloudinary.uploader.destroy(full_public_id)
-                print(f"🗑️ Imagen eliminada de Cloudinary: {result}")
                 return result
     except Exception as e:
-        print(f"❌ Error eliminando de Cloudinary: {e}")
+        pass
     return None
-
-# Configuración de base de datos
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-# Pool de conexiones para PostgreSQL (mejor rendimiento)
-connection_pool = None
-
-def init_connection_pool():
-    global connection_pool
-    if DATABASE_URL and not connection_pool:
-        try:
-            connection_pool = psycopg2.pool.SimpleConnectionPool(
-                1, 20,  # min y max conexiones
-                DATABASE_URL
-            )
-            print("✅ Pool de conexiones PostgreSQL creado")
-        except Exception as e:
-            print(f"❌ Error creando pool de conexiones: {e}")
-            # Si falla el pool, seguir sin él
-            connection_pool = None
 
 def get_db_connection():
     if DATABASE_URL:
-        # Producción - PostgreSQL
         if connection_pool:
             conn = connection_pool.getconn()
-            # IMPORTANTE: Configurar cursor factory en la conexión
             conn.cursor_factory = RealDictCursor
             return conn
         else:
             return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     else:
-        # Desarrollo local - SQLite
         conn = sqlite3.connect('personas.db')
         conn.row_factory = sqlite3.Row
         return conn
 
 def return_db_connection(conn):
-    """Devuelve la conexión al pool (solo para PostgreSQL)"""
     if DATABASE_URL and connection_pool:
         connection_pool.putconn(conn)
     else:
         conn.close()
 
 def crear_tabla_si_no_existe():
-    """Crear tabla personas directamente - SIMPLIFICADO"""
     if not DATABASE_URL:
-        return  # Solo para PostgreSQL
-        
-    print("🔧 CREANDO TABLA PERSONAS...")
+        return
     try:
-        # Conexión directa a PostgreSQL
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         
-        # Crear tabla - ACTUALIZADO: foto ahora guarda URL de Cloudinary
         create_sql = """
         CREATE TABLE IF NOT EXISTS personas (
             id VARCHAR(36) PRIMARY KEY,
@@ -161,28 +127,19 @@ def crear_tabla_si_no_existe():
         
         cursor.execute(create_sql)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_personas_cedula ON personas(cedula)")
-        
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print("✅ Tabla 'personas' creada exitosamente")
-        
     except Exception as e:
-        print(f"❌ ERROR CREANDO TABLA: {e}")
         raise
 
 def actualizar_base_datos():
-    """Script para agregar las nuevas columnas a la tabla existente"""
     if not DATABASE_URL:
         return
-        
-    print("🔧 ACTUALIZANDO BASE DE DATOS...")
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
         
-        # Verificar si las columnas ya existen
         cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
@@ -191,44 +148,25 @@ def actualizar_base_datos():
         
         existing_columns = [row[0] for row in cursor.fetchall()]
         
-        # Agregar columna foto si no existe (TEXT para URLs de Cloudinary)
         if 'foto' not in existing_columns:
             cursor.execute("ALTER TABLE personas ADD COLUMN foto TEXT;")
-            print("✅ Columna 'foto' agregada")
-        else:
-            print("ℹ️ Columna 'foto' ya existe")
             
-        # Agregar columna sindicato si no existe
         if 'sindicato' not in existing_columns:
             cursor.execute("ALTER TABLE personas ADD COLUMN sindicato VARCHAR(100);")
-            print("✅ Columna 'sindicato' agregada")
-        else:
-            print("ℹ️ Columna 'sindicato' ya existe")
         
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print("✅ Base de datos actualizada exitosamente")
-        
     except Exception as e:
-        print(f"❌ Error actualizando base de datos: {e}")
-        # No hacer raise aquí para no detener la aplicación
         pass
 
-# EJECUTAR INMEDIATAMENTE al importar
+# Inicialización
 if DATABASE_URL:
     crear_tabla_si_no_existe()
     actualizar_base_datos()
 
-# Función helper para conectar a la base de datos
 def execute_query(query, params=None, fetch=False):
-    """
-    Ejecuta una query de forma segura
-    fetch: True para SELECT, False para INSERT/UPDATE/DELETE
-    """
     conn = get_db_connection()
-    
     try:
         cursor = conn.cursor()
         
@@ -246,9 +184,7 @@ def execute_query(query, params=None, fetch=False):
             affected_rows = cursor.rowcount
             cursor.close()
             return affected_rows
-            
     except Exception as e:
-        print(f"❌ Error ejecutando query: {e}")
         if not fetch:
             conn.rollback()
         raise
@@ -259,12 +195,9 @@ def execute_query(query, params=None, fetch=False):
             conn.close()
 
 def execute_query_one(query, params=None):
-    """Ejecuta una query y devuelve solo un resultado"""
     conn = get_db_connection()
     cursor = None
-    
     try:
-        # Para PostgreSQL usar RealDictCursor
         if DATABASE_URL:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
         else:
@@ -277,11 +210,7 @@ def execute_query_one(query, params=None):
         
         result = cursor.fetchone()
         return result
-        
     except Exception as e:
-        print(f"❌ Error ejecutando query: {e}")
-        print(f"❌ Query: {query}")
-        print(f"❌ Params: {params}")
         raise
     finally:
         if cursor:
@@ -292,88 +221,24 @@ def execute_query_one(query, params=None):
             else:
                 conn.close()
 
-# FUNCIÓN PARA DEPURAR - Agregar temporalmente
-def debug_database():
-    """Función para verificar qué hay en la base de datos"""
-    try:
-        # Contar registros
-        count = execute_query_one("SELECT COUNT(*) as total FROM personas")
-        print(f"🔢 Total registros en DB: {count}")
-        
-        # Mostrar todos los registros
-        personas = execute_query("SELECT * FROM personas", fetch=True)
-        print(f"📋 Registros encontrados: {len(personas)}")
-        
-        for i, persona in enumerate(personas):
-            print(f"  {i+1}. {dict(persona) if DATABASE_URL else dict(persona)}")
-            
-    except Exception as e:
-        print(f"❌ Error en debug: {e}")
-
-# FUNCIÓN DE BÚSQUEDA - VERSIÓN DEBUG TEMPORAL
 def buscar_trabajadores(termino_busqueda):
-    """
-    Buscar trabajadores - VERSION DEBUG TEMPORAL
-    """
     try:
-        # Debug inicial
-        print(f"🔍 DEBUG - Función llamada con: '{termino_busqueda}'")
-        print(f"🔍 DEBUG - Tipo del parámetro: {type(termino_busqueda)}")
-        
-        # Limpiar el término de búsqueda
         termino = termino_busqueda.strip()
-        
-        print(f"🔍 DEBUG - Término limpio: '{termino}'")
-        print(f"🔍 DEBUG - Longitud del término: {len(termino)}")
-        print(f"🔍 DEBUG - Término está vacío: {not termino}")
-        
         if not termino:
-            print("🔍 DEBUG - Retornando lista vacía por término vacío")
             return []
         
-        # Consulta MUY simple para debug
-        print(f"🔍 DEBUG - DATABASE_URL definido: {DATABASE_URL is not None if 'DATABASE_URL' in globals() else 'Variable no existe'}")
-        
         if DATABASE_URL:
-            # PostgreSQL - versión simple
             query = "SELECT * FROM personas WHERE LOWER(nombres) LIKE LOWER(%s) OR cedula LIKE %s ORDER BY nombres"
             params = (f'%{termino}%', f'%{termino}%')
-            print(f"🔍 DEBUG - Usando PostgreSQL")
         else:
-            # SQLite - versión simple
             query = "SELECT * FROM personas WHERE LOWER(nombres) LIKE LOWER(?) OR cedula LIKE ? ORDER BY nombres"
             params = (f'%{termino}%', f'%{termino}%')
-            print(f"🔍 DEBUG - Usando SQLite")
         
-        print(f"🔍 DEBUG - Query: {query}")
-        print(f"🔍 DEBUG - Params: {params}")
-        
-        # Ejecutar query
-        print(f"🔍 DEBUG - Ejecutando query...")
         resultados = execute_query(query, params, fetch=True)
-        
-        print(f"🔍 DEBUG - Query ejecutada. Resultados: {len(resultados)}")
-        
-        # Mostrar algunos resultados
-        if resultados:
-            print(f"🔍 DEBUG - Primeros 2 resultados:")
-            for i, resultado in enumerate(resultados[:2]):
-                try:
-                    r_dict = dict(resultado)
-                    print(f"  {i+1}. {r_dict.get('nombres', 'SIN_NOMBRE')} - {r_dict.get('cedula', 'SIN_CEDULA')}")
-                except Exception as e:
-                    print(f"  {i+1}. Error procesando resultado: {e}")
-        else:
-            print(f"🔍 DEBUG - No se encontraron resultados")
-        
         return resultados
-        
     except Exception as e:
-        print(f"❌ ERROR en búsqueda: {e}")
-        import traceback
-        print(f"❌ Traceback completo: {traceback.format_exc()}")
         return []
-# Decorator para rutas protegidas
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -383,7 +248,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# RUTAS PÚBLICAS
+# RUTAS
 @app.route('/')
 def inicio():
     return render_template('inicio.html')
@@ -391,42 +256,24 @@ def inicio():
 @app.route('/consultar', methods=['POST'])
 def consultar_trabajador():
     cedula = request.form['cedula'].strip()
-
-      # 🔧 NUEVA LÍNEA: Extraer solo números de la cédula ingresada
     numeros_cedula = ''.join(filter(str.isdigit, cedula))
     
-
-    print(f"🔍 Buscando cédula: '{cedula}'")
-    
-    # DEBUG: Verificar qué hay en la base de datos
-    debug_database()
-    
     try:
-        # 🔧 NUEVA CONSULTA: Usar REGEXP_REPLACE para extraer solo números
         persona = execute_query_one(
             "SELECT * FROM personas WHERE REGEXP_REPLACE(cedula, '[^0-9]', '', 'g') = %s",
             (numeros_cedula,)
         )
 
-        print(f"🔍 Resultado de búsqueda: {persona}")
-        
         if persona:
-            print("✅ Trabajador encontrado!")
-            # Con RealDictCursor, persona ya es un dict-like object
             persona_dict = dict(persona)
-            print(f"📋 Datos del trabajador: {persona_dict}")
             return render_template('perfil_trabajador.html', persona=persona_dict)
         else:
-            print("❌ Trabajador no encontrado")
             flash('No se encontró ningún trabajador con esa cédula', 'error')
             return redirect(url_for('inicio'))
-            
     except Exception as e:
-        print(f"❌ Error: {e}")
         flash('Error al consultar la base de datos', 'error')
         return redirect(url_for('inicio'))
 
-# RUTAS DE AUTENTICACIÓN
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -448,44 +295,24 @@ def admin_logout():
     flash('Has cerrado sesión correctamente', 'success')
     return redirect(url_for('inicio'))
 
-# RUTAS ADMINISTRATIVAS (PROTEGIDAS)
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
     try:
-        # Obtener término de búsqueda si existe
         termino_busqueda = request.args.get('busqueda', '').strip()
         
-        print(f"🔍 Dashboard - Término de búsqueda: '{termino_busqueda}'")
-        
-        # Si hay término de búsqueda, usar búsqueda
         if termino_busqueda:
             personas = buscar_trabajadores(termino_busqueda)
         else:
-            # Si no hay búsqueda, mostrar todos los trabajadores
             personas = execute_query(
                 "SELECT * FROM personas ORDER BY apellidos, nombres",
                 fetch=True
             )
         
-        print(f"📊 Personas encontradas: {len(personas)}")
-        
-        # Debug: mostrar los datos
-        for i, persona in enumerate(personas):
-            if DATABASE_URL:
-                p_dict = dict(persona)
-            else:
-                p_dict = dict(persona)
-            print(f"  👤 {i+1}. ID: {p_dict.get('id', 'SIN_ID')}, Nombre: {p_dict.get('nombres', 'SIN_NOMBRE')}, Cédula: {p_dict.get('cedula', 'SIN_CEDULA')}")
-        
         return render_template('admin_dashboard.html', 
                              personas=personas, 
                              termino_busqueda=termino_busqueda)
-        
     except Exception as e:
-        print(f"❌ Error cargando dashboard: {e}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
         flash('Error cargando los datos', 'error')
         return render_template('admin_dashboard.html', 
                              personas=[], 
@@ -503,27 +330,19 @@ def agregar_persona():
         cargo = request.form['cargo'].strip()
         sindicato = request.form['sindicato'].strip()
 
-        # Validar campos vacíos
         if not all([nombres, apellidos, cedula, fecha_emision, cargo, sindicato]):
             flash('Todos los campos son obligatorios', 'error')
             return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
-        print(f"💾 Guardando cédula: '{cedula}'")
-
-        # Manejo de la foto con Cloudinary
         foto_url = None
         if 'foto' in request.files:
             file = request.files['foto']
             if file and file.filename != '' and allowed_file(file.filename):
-                print(f"📸 Subiendo foto a Cloudinary...")
                 foto_url = upload_to_cloudinary(file, cedula)
-                if foto_url:
-                    print(f"✅ Foto subida exitosamente: {foto_url}")
-                else:
+                if not foto_url:
                     flash('Error al subir la foto. Se guardará el trabajador sin foto.', 'warning')
 
         try:
-            # Verificar si ya existe la cédula
             existing = execute_query_one(
                 "SELECT id FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT id FROM personas WHERE cedula = ?",
                 (cedula,)
@@ -533,10 +352,8 @@ def agregar_persona():
                 flash('Ya existe un trabajador con esa cédula', 'error')
                 return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
-            # Generar ID único
             persona_id = str(uuid.uuid4())
 
-            # Insertar en la base de datos (ACTUALIZADO: foto ahora es URL de Cloudinary)
             affected = execute_query(
                 """INSERT INTO personas (id, nombres, apellidos, cedula, fecha_emision, cargo, foto, sindicato) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""" if DATABASE_URL else 
@@ -546,18 +363,13 @@ def agregar_persona():
             )
             
             if affected > 0:
-                print(f"✅ Trabajador guardado exitosamente")
-                
-                # Generar QR
                 qr_data = url_for('ver_perfil_publico', cedula=cedula, _external=True)
                 qr = qrcode.QRCode(version=1, box_size=10, border=5)
                 qr.add_data(qr_data)
                 qr.make(fit=True)
                 
-                # Crear directorio static si no existe
                 os.makedirs('static', exist_ok=True)
                 
-                # Generar imagen QR
                 qr_img = qr.make_image(fill_color="black", back_color="white")
                 qr_path = f'static/{persona_id}.png'
                 qr_img.save(qr_path)
@@ -568,9 +380,7 @@ def agregar_persona():
             else:
                 flash('Error al guardar el trabajador. Intente nuevamente.', 'error')
                 return render_template('agregar_persona.html', sindicatos=SINDICATOS)
-                
         except Exception as e:
-            print(f"❌ Error al insertar: {e}")
             flash(f'Error en la base de datos: {str(e)}', 'error')
             return render_template('agregar_persona.html', sindicatos=SINDICATOS)
 
@@ -587,7 +397,6 @@ def editar_persona(persona_id):
         cargo = request.form['cargo'].strip()
         sindicato = request.form['sindicato'].strip()
         
-        # Obtener datos actuales para preservar foto si no se cambia
         persona_actual = execute_query_one(
             "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
             (persona_id,)
@@ -595,21 +404,15 @@ def editar_persona(persona_id):
         
         foto_url = persona_actual['foto'] if persona_actual else None
         
-        # Manejo de nueva foto con Cloudinary
         if 'foto' in request.files:
             file = request.files['foto']
             if file and file.filename != '' and allowed_file(file.filename):
-                print(f"📸 Subiendo nueva foto a Cloudinary...")
-                
-                # Eliminar foto anterior de Cloudinary si existe
                 if foto_url:
                     delete_from_cloudinary(foto_url)
                 
-                # Subir nueva foto
                 nueva_foto_url = upload_to_cloudinary(file, cedula)
                 if nueva_foto_url:
                     foto_url = nueva_foto_url
-                    print(f"✅ Nueva foto subida exitosamente: {foto_url}")
                 else:
                     flash('Error al subir la nueva foto. Se mantendrá la foto anterior.', 'warning')
         
@@ -628,7 +431,6 @@ def editar_persona(persona_id):
                 flash('No se encontró el trabajador para actualizar', 'error')
             
             return redirect(url_for('admin_dashboard'))
-            
         except Exception as e:
             flash(f'Error al actualizar: {str(e)}', 'error')
             return redirect(url_for('admin_dashboard'))
@@ -644,7 +446,6 @@ def editar_persona(persona_id):
             else:
                 flash('Trabajador no encontrado', 'error')
                 return redirect(url_for('admin_dashboard'))
-                
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
             return redirect(url_for('admin_dashboard'))
@@ -653,7 +454,6 @@ def editar_persona(persona_id):
 @login_required
 def eliminar_persona(persona_id):
     try:
-        # Obtener datos antes de eliminar para borrar la foto de Cloudinary
         persona = execute_query_one(
             "SELECT foto FROM personas WHERE id = %s" if DATABASE_URL else "SELECT foto FROM personas WHERE id = ?",
             (persona_id,)
@@ -665,27 +465,22 @@ def eliminar_persona(persona_id):
         )
         
         if affected > 0:
-            # Eliminar archivo QR local
             try:
                 os.remove(f'static/{persona_id}.png')
             except FileNotFoundError:
                 pass
             
-            # Eliminar foto de Cloudinary si existe
             if persona and persona['foto']:
                 delete_from_cloudinary(persona['foto'])
-                print(f"🗑️ Foto eliminada de Cloudinary")
             
             flash('Trabajador eliminado correctamente', 'success')
         else:
             flash('No se encontró el trabajador para eliminar', 'error')
-            
     except Exception as e:
         flash(f'Error al eliminar: {str(e)}', 'error')
     
     return redirect(url_for('admin_dashboard'))
 
-# RUTAS CORREGIDAS para PostgreSQL
 @app.route('/admin/ver_perfil/<persona_id>')
 @login_required
 def admin_ver_perfil(persona_id):
@@ -696,7 +491,6 @@ def admin_ver_perfil(persona_id):
         )
         
         if persona:
-            # Convertir a dict - CORREGIDO para PostgreSQL
             if DATABASE_URL:
                 persona_dict = dict(persona)
             else:
@@ -718,10 +512,8 @@ def admin_ver_perfil(persona_id):
         flash(f'Error: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
 
-# RUTAS PARA QR (CORREGIDAS)
 @app.route('/perfil/<cedula>')
 def ver_perfil_publico(cedula):
-    """Ruta pública para ver perfil mediante QR"""
     try:
         persona = execute_query_one(
             "SELECT * FROM personas WHERE cedula = %s" if DATABASE_URL else "SELECT * FROM personas WHERE cedula = ?",
@@ -729,7 +521,6 @@ def ver_perfil_publico(cedula):
         )
         
         if persona:
-            # Convertir a dict - CORREGIDO para PostgreSQL
             if DATABASE_URL:
                 persona_dict = dict(persona)
             else:
@@ -751,7 +542,6 @@ def ver_perfil_publico(cedula):
 
 @app.route('/persona/<persona_id>')
 def ver_persona(persona_id):
-    """Ruta legacy - redirige a perfil por cédula"""
     try:
         persona = execute_query_one(
             "SELECT cedula FROM personas WHERE id = %s" if DATABASE_URL else "SELECT cedula FROM personas WHERE id = ?",
@@ -781,7 +571,6 @@ def generar_pdf(persona_id):
         if not persona:
             return "Persona no encontrada", 404
 
-        # Convertir a dict si es necesario
         if DATABASE_URL:
             p = dict(persona)
         else:
@@ -810,12 +599,10 @@ def generar_pdf(persona_id):
     except Exception as e:
         return f"Error generando PDF: {str(e)}", 500
 
-# Nueva ruta para generar PDF con todos los trabajadores
 @app.route('/admin/pdf_todos')
 @login_required
 def generar_pdf_todos():
     try:
-        # Obtener todos los trabajadores
         personas = execute_query(
             "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato FROM personas ORDER BY apellidos, nombres",
             fetch=True
@@ -825,7 +612,6 @@ def generar_pdf_todos():
             flash('No hay trabajadores registrados para generar el PDF', 'warning')
             return redirect(url_for('admin_dashboard'))
         
-        # Crear el PDF
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, 
                               pagesize=A4,
@@ -834,7 +620,6 @@ def generar_pdf_todos():
                               leftMargin=0.5*inch,
                               rightMargin=0.5*inch)
         
-        # Estilos
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'CustomTitle',
@@ -845,30 +630,23 @@ def generar_pdf_todos():
             textColor=colors.darkblue
         )
         
-        # Contenido del PDF
         story = []
         
-        # Título
         titulo = Paragraph("LISTADO COMPLETO DE TRABAJADORES", title_style)
         story.append(titulo)
         
-        # Información del reporte
         fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
         fecha_para = Paragraph(f"Generado el: {fecha_actual}", styles['Normal'])
         story.append(fecha_para)
         story.append(Spacer(1, 20))
         
-        # Total de trabajadores
         total_trabajadores = Paragraph(f"Total de trabajadores: {len(personas)}", styles['Heading3'])
         story.append(total_trabajadores)
         story.append(Spacer(1, 20))
         
-        # Crear tabla con los datos
         data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Sindicato', 'Fecha Emisión']]
         
-        # Agregar datos de trabajadores
         for i, persona in enumerate(personas, 1):
-            # Convertir a dict según el tipo de base de datos
             if DATABASE_URL:
                 p = dict(persona)
             else:
@@ -887,32 +665,23 @@ def generar_pdf_todos():
                 fecha_emision
             ])
         
-        # Crear y estilizar la tabla
         table = Table(data, colWidths=[0.4*inch, 2.2*inch, 1.1*inch, 1.8*inch, 0.8*inch, 1.0*inch])
         table.setStyle(TableStyle([
-            # Estilo del encabezado
             ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 9),
-            
-            # Estilo del contenido
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            
-            # Alternar colores de filas
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
         ]))
         
         story.append(table)
-        
-        # Construir el PDF
         doc.build(story)
         
-        # Preparar respuesta
         buffer.seek(0)
         fecha_archivo = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"todos_trabajadores_{fecha_archivo}.pdf"
@@ -923,14 +692,11 @@ def generar_pdf_todos():
             download_name=filename,
             mimetype='application/pdf'
         )
-        
     except Exception as e:
-        print(f"❌ Error al generar PDF: {e}")
         flash(f'Error al generar el PDF: {str(e)}', 'error')
         return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
-    # Inicializar pool de conexiones
     if DATABASE_URL:
         init_connection_pool()
         
