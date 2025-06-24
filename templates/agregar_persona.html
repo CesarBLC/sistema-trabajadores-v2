@@ -436,10 +436,10 @@
                 <div class="form-group full-width">
                     <label for="cargo">Cargo:</label>
                     <input type="text" id="cargo" name="cargo" placeholder="Ejemplo: Desarrollador, Analista, etc." required>
-                </div>
-<div class="form-group">
+
+                <div class="form-group">
                     <label for="telefono">Teléfono:</label>
-                    <input type="tel" id="telefono" name="telefono" placeholder="Ejemplo: 0414-1234567" required>
+                    <input type="tel" id="telefono" name="telefono" placeholder="Ejemplo: 0414-1234567" pattern="[0-9]{11}" maxlength="11" title="Debe contener exactamente 11 números" required>
                 </div>
 
                 <div class="form-group">
@@ -511,6 +511,18 @@
             } else {
                 e.target.value = '';
             }
+        });
+// Validación de teléfono - solo números y máximo 11
+        document.getElementById('telefono').addEventListener('input', function(e) {
+            // Eliminar todo lo que no sea número
+            let valor = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Limitar a 11 dígitos
+            if (valor.length > 11) {
+                valor = valor.slice(0, 11);
+            }
+            
+            e.target.value = valor;
         });
 
         // Actualizar texto del input de archivo cuando se selecciona
