@@ -643,7 +643,7 @@ def generar_pdf_todos():
         story.append(total_trabajadores)
         story.append(Spacer(1, 20))
         
-        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Sindicato', 'Fecha Emisión']]
+        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Unidad', 'Fecha Emisión']]
         
         for i, persona in enumerate(personas, 1):
             if DATABASE_URL:
