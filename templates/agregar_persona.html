@@ -323,10 +323,14 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
             .header {
                 flex-direction: column;
                 text-align: center;
-                padding: 25px;
+                padding: 25px 15px;
             }
 
             .venezuela-accent {
@@ -335,8 +339,9 @@
             }
 
             .container {
-                padding: 40px 25px;
-                margin: 10px;
+                padding: 30px 15px;
+                margin: 0;
+                max-width: 100%;
             }
 
             .form-grid {
@@ -344,23 +349,51 @@
                 gap: 20px;
             }
 
+            .form-group input, 
+            .form-group select {
+                padding: 14px 12px;
+                font-size: 16px;
+                max-width: 100%;
+            }
+
             .form-actions {
                 flex-direction: column;
+                gap: 12px;
             }
 
             .btn {
                 width: 100%;
                 justify-content: center;
+                padding: 14px 16px;
+                max-width: 100%;
             }
 
             h1 {
                 font-size: 24px;
             }
+
+            .file-input {
+                padding: 14px 12px;
+            }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 10px;
+            }
+            
             .membrete {
                 font-size: 10px;
+            }
+
+            .form-group input, 
+            .form-group select {
+                padding: 12px 10px;
+            }
+
+            .btn {
+                padding: 12px 14px;
+                font-size: 15px;
             }
         }
     </style>
@@ -436,6 +469,7 @@
                 <div class="form-group full-width">
                     <label for="cargo">Cargo:</label>
                     <input type="text" id="cargo" name="cargo" placeholder="Ejemplo: Desarrollador, Analista, etc." required>
+                </div>
 
                 <div class="form-group">
                     <label for="telefono">Teléfono:</label>
@@ -452,15 +486,16 @@
                     <input type="text" id="oficio" name="oficio" placeholder="Ejemplo: Electricista, Albañil, etc." required>
                 </div>
 
-               <!-- NUEVO: Campo de Unidad -->
-<div class="form-group">
-    <label for="unidad">Unidad:</label>
-    <select id="unidad" name="unidad" required>
-        <option value="">Seleccionar unidad...</option>
-        <option value="Construcción">Construcción</option>
-        <option value="Cemento">Cemento</option>
-    </select>
-</div>
+                <!-- NUEVO: Campo de Unidad -->
+                <div class="form-group">
+                    <label for="unidad">Unidad:</label>
+                    <select id="unidad" name="unidad" required>
+                        <option value="">Seleccionar unidad...</option>
+                        <option value="Construcción">Construcción</option>
+                        <option value="Cemento">Cemento</option>
+                    </select>
+                </div>
+                
                 <!-- NUEVO: Campo de Foto -->
                 <div class="form-group">
                     <label for="foto">Foto del Trabajador:</label>
@@ -512,7 +547,8 @@
                 e.target.value = '';
             }
         });
-// Validación de teléfono - solo números y máximo 11
+        
+        // Validación de teléfono - solo números y máximo 11
         document.getElementById('telefono').addEventListener('input', function(e) {
             // Eliminar todo lo que no sea número
             let valor = e.target.value.replace(/[^0-9]/g, '');
