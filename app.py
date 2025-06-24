@@ -646,14 +646,32 @@ def generar_pdf(persona_id):
 @login_required
 def generar_pdf_todos():
     try:
+        # Consulta usando el campo 'sindicato' que contiene las unidades
         personas = execute_query(
-            "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato, telefono, region, oficio FROM personas ORDER BY apellidos, nombres",
+            "SELECT nombres, apellidos, cedula, cargo, fecha_emision, sindicato, telefono, region, oficio FROM personas ORDER BY sindicato, apellidos, nombres",
             fetch=True
         )
         
         if not personas:
             flash('No hay trabajadores registrados para generar el PDF', 'warning')
             return redirect(url_for('admin_dashboard'))
+        
+        # Agrupar trabajadores por unidad
+        trabajadores_cemento = []
+        trabajadores_construccion = []
+        
+        for persona in personas:
+            if DATABASE_URL:
+                p = dict(persona)
+            else:
+                p = dict(persona)
+            
+            unidad = p.get('sindicato', '').strip() if p.get('sindicato') else ''
+            
+            if unidad.lower() == 'cemento':
+                trabajadores_cemento.append(p)
+            elif unidad.lower() == 'construcción':
+                trabajadores_construccion.append(p)
         
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, 
@@ -673,9 +691,21 @@ def generar_pdf_todos():
             textColor=colors.darkblue
         )
         
+        # Estilo para títulos de sección
+        section_style = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=15,
+            spaceBefore=20,
+            alignment=TA_CENTER,
+            textColor=colors.darkgreen
+        )
+        
         story = []
         
-        titulo = Paragraph("LISTADO COMPLETO DE TRABAJADORES", title_style)
+        # Título principal
+        titulo = Paragraph("LISTADO DE TRABAJADORES POR UNIDAD", title_style)
         story.append(titulo)
         
         fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -683,57 +713,87 @@ def generar_pdf_todos():
         story.append(fecha_para)
         story.append(Spacer(1, 20))
         
-        total_trabajadores = Paragraph(f"Total de trabajadores: {len(personas)}", styles['Heading3'])
-        story.append(total_trabajadores)
-        story.append(Spacer(1, 20))
+        # Resumen
+        total_trabajadores = len(personas)
+        total_cemento = len(trabajadores_cemento)
+        total_construccion = len(trabajadores_construccion)
         
-        data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Unidad', 'Teléfono', 'Región', 'Oficio', 'Fecha Emisión']]
+        resumen = Paragraph(f"Total de trabajadores: {total_trabajadores} | Cemento: {total_cemento} | Construcción: {total_construccion}", styles['Heading3'])
+        story.append(resumen)
+        story.append(Spacer(1, 30))
         
-        for i, persona in enumerate(personas, 1):
-            if DATABASE_URL:
-                p = dict(persona)
-            else:
-                p = dict(persona)
+        # Función para crear tabla de trabajadores
+        def crear_tabla_trabajadores(trabajadores_lista, contador_inicial=1):
+            data = [['N°', 'Nombre Completo', 'Cédula', 'Cargo', 'Teléfono', 'Región', 'Oficio', 'Fecha Emisión']]
             
-            nombre_completo = f"{p['nombres']} {p['apellidos']}"
-            fecha_emision = p['fecha_emision'].strftime("%d/%m/%Y") if p['fecha_emision'] else "N/A"
-            sindicato = p.get('sindicato', 'No asignado') or 'No asignado'
-            telefono = p.get('telefono', 'No registrado') or 'No registrado'
-            region = p.get('region', 'No registrada') or 'No registrada'
-            oficio = p.get('oficio', 'No registrado') or 'No registrado'
+            for i, p in enumerate(trabajadores_lista, contador_inicial):
+                nombre_completo = f"{p['nombres']} {p['apellidos']}"
+                fecha_emision = p['fecha_emision'].strftime("%d/%m/%Y") if p['fecha_emision'] else "N/A"
+                telefono = p.get('telefono', 'No registrado') or 'No registrado'
+                region = p.get('region', 'No registrada') or 'No registrada'
+                oficio = p.get('oficio', 'No registrado') or 'No registrado'
+                
+                data.append([
+                    str(i),
+                    nombre_completo,
+                    p['cedula'],
+                    p['cargo'],
+                    telefono,
+                    region,
+                    oficio,
+                    fecha_emision
+                ])
             
-            data.append([
-                str(i),
-                nombre_completo,
-                p['cedula'],
-                p['cargo'],
-                sindicato,
-                telefono,
-                region,
-                oficio,
-                fecha_emision
-            ])
+            table = Table(data, colWidths=[0.4*inch, 2.0*inch, 1.0*inch, 1.5*inch, 0.9*inch, 0.9*inch, 0.9*inch, 0.9*inch])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 7),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            return table
         
-        table = Table(data, colWidths=[0.3*inch, 1.8*inch, 0.9*inch, 1.4*inch, 0.7*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 7),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-        ]))
+        contador = 1
         
-        story.append(table)
+        # SECCIÓN CEMENTO
+        if trabajadores_cemento:
+            titulo_cemento = Paragraph("UNIDAD DE CEMENTO", section_style)
+            story.append(titulo_cemento)
+            
+            subtotal_cemento = Paragraph(f"Total trabajadores: {len(trabajadores_cemento)}", styles['Normal'])
+            story.append(subtotal_cemento)
+            story.append(Spacer(1, 10))
+            
+            tabla_cemento = crear_tabla_trabajadores(trabajadores_cemento, contador)
+            story.append(tabla_cemento)
+            story.append(Spacer(1, 30))
+            
+            contador += len(trabajadores_cemento)
+        
+        # SECCIÓN CONSTRUCCIÓN
+        if trabajadores_construccion:
+            titulo_construccion = Paragraph("UNIDAD DE CONSTRUCCIÓN", section_style)
+            story.append(titulo_construccion)
+            
+            subtotal_construccion = Paragraph(f"Total trabajadores: {len(trabajadores_construccion)}", styles['Normal'])
+            story.append(subtotal_construccion)
+            story.append(Spacer(1, 10))
+            
+            tabla_construccion = crear_tabla_trabajadores(trabajadores_construccion, contador)
+            story.append(tabla_construccion)
+        
         doc.build(story)
         
         buffer.seek(0)
         fecha_archivo = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"todos_trabajadores_{fecha_archivo}.pdf"
+        filename = f"trabajadores_por_unidad_{fecha_archivo}.pdf"
         
         return send_file(
             buffer,
