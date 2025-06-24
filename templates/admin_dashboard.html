@@ -436,151 +436,131 @@
             border: 2px solid #e9ecef;
         }
 
-        /* ESTILOS ACTUALIZADOS PARA UNIDADES CON COLORES RESALTANTES */
-        .unidad-badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-        }
+        /* Estilos para unidad - Adaptado del diseño original */
+.unidad-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-        /* Unidad Cemento - Tono púrpura/violeta resaltante */
-        .unidad-cemento {
-            background: linear-gradient(135deg, #8e24aa 0%, #ab47bc 100%);
-            color: white;
-            border-color: #7b1fa2;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
+/* Unidad Construcción - Verde (como el sindicato-funttbccac original) */
+.unidad-construccion {
+    background: #e8f5e8;
+    color: #388e3c;
+}
 
-        .unidad-cemento:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(142, 36, 170, 0.3);
-        }
+/* Unidad Cemento - Morado (como el sindicato-cbst original) */
+.unidad-cemento {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
 
-        /* Unidad Construcción - Tono verde resaltante */
-        .unidad-construccion {
-            background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
-            color: white;
-            border-color: #388e3c;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
+/* Sin asignar - Gris neutro */
+.unidad-none {
+    background: #f5f5f5;
+    color: #757575;
+}
 
-        .unidad-construccion:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(67, 160, 71, 0.3);
-        }
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
-        /* Sin asignar - Estilo neutro */
-        .unidad-none {
-            background: #f5f5f5;
-            color: #757575;
-            border-color: #e0e0e0;
-        }
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
 
-        .actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+.btn-edit {
+    background: #003DA5;
+    color: white;
+}
 
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-        }
+.btn-edit:hover {
+    background: #002a7a;
+}
 
-        .btn-edit {
-            background: #003DA5;
-            color: white;
-        }
+.btn-delete {
+    background: #CF142B;
+    color: white;
+}
 
-        .btn-edit:hover {
-            background: #002a7a;
-        }
+.btn-delete:hover {
+    background: #a10e22;
+}
 
-        .btn-delete {
-            background: #CF142B;
-            color: white;
-        }
+.btn-pdf {
+    background: #6c757d;
+    color: white;
+}
 
-        .btn-delete:hover {
-            background: #a10e22;
-        }
+.btn-pdf:hover {
+    background: #545b62;
+}
 
-        .btn-pdf {
-            background: #6c757d;
-            color: white;
-        }
+.btn-info {
+    background: white;
+    color: #003DA5;
+    border: 1px solid #003DA5;
+}
 
-        .btn-pdf:hover {
-            background: #545b62;
-        }
+.btn-info:hover {
+    background: #003DA5;
+    color: white;
+}
 
-        .btn-info {
-            background: white;
-            color: #003DA5;
-            border: 1px solid #003DA5;
-        }
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #6c757d;
+}
 
-        .btn-info:hover {
-            background: #003DA5;
-            color: white;
-        }
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #adb5bd;
+}
 
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: #6c757d;
-        }
+.empty-state h3 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
 
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #adb5bd;
-        }
+.empty-state p {
+    font-size: 16px;
+    margin-bottom: 30px;
+}
 
-        .empty-state h3 {
-            color: #495057;
-            margin-bottom: 10px;
-            font-size: 20px;
-            font-weight: 600;
-        }
+.alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-weight: 500;
+    border-left: 4px solid;
+}
 
-        .empty-state p {
-            font-size: 16px;
-            margin-bottom: 30px;
-        }
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
 
-        .alert {
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            font-weight: 500;
-            border-left: 4px solid;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-left-color: #28a745;
-        }
-
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-left-color: #CF142B;
-        }
-
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left-color: #CF142B;
+}
         .membrete {
             font-size: 11px;
             color: #6c757d;
