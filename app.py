@@ -20,6 +20,14 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from datetime import datetime
+import logging
+import socket
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO)
+
+# Configurar timeout para evitar conexiones colgadas
+socket.setdefaulttimeout(30)
 
 app = Flask(__name__)
 app.secret_key = '10000'
@@ -47,8 +55,17 @@ def init_connection_pool():
     global connection_pool
     if DATABASE_URL and not connection_pool:
         try:
-            connection_pool = psycopg2.pool.SimpleConnectionPool(1, 20, DATABASE_URL)
+            # Configuración optimizada para Supabase
+            connection_pool = psycopg2.pool.SimpleConnectionPool(
+                1, 10,  # Reducir conexiones para Supabase
+                DATABASE_URL,
+                # Parámetros adicionales para Supabase
+                connect_timeout=10,
+                application_name='flask_trabajadores'
+            )
+            print("✅ Pool de conexiones Supabase inicializado correctamente")
         except Exception as e:
+            print(f"❌ Error inicializando pool: {e}")
             connection_pool = None
 
 def allowed_file(filename):
@@ -88,12 +105,27 @@ def delete_from_cloudinary(foto_url):
 
 def get_db_connection():
     if DATABASE_URL:
-        if connection_pool:
-            conn = connection_pool.getconn()
-            conn.cursor_factory = RealDictCursor
-            return conn
-        else:
-            return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        try:
+            if connection_pool:
+                conn = connection_pool.getconn()
+                conn.cursor_factory = RealDictCursor
+                return conn
+            else:
+                return psycopg2.connect(
+                    DATABASE_URL, 
+                    cursor_factory=RealDictCursor,
+                    connect_timeout=10
+                )
+        except psycopg2.OperationalError as e:
+            print(f"Error de conexión a Supabase: {e}")
+            # Intentar reconectar
+            if connection_pool:
+                init_connection_pool()
+                if connection_pool:
+                    conn = connection_pool.getconn()
+                    conn.cursor_factory = RealDictCursor
+                    return conn
+            raise
     else:
         conn = sqlite3.connect('personas.db')
         conn.row_factory = sqlite3.Row
@@ -260,6 +292,19 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# HEALTH CHECK
+@app.route('/health')
+def health_check():
+    try:
+        # Verificar conexión a Supabase
+        test_query = execute_query_one("SELECT 1 as test")
+        if test_query:
+            return {"status": "healthy", "database": "connected"}, 200
+        else:
+            return {"status": "unhealthy", "database": "error"}, 500
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}, 500
+
 # RUTAS
 @app.route('/')
 def inicio():
@@ -271,9 +316,10 @@ def consultar_trabajador():
     numeros_cedula = ''.join(filter(str.isdigit, cedula))
     
     try:
+        # Buscar por cédula exacta o solo números
         persona = execute_query_one(
-            "SELECT * FROM personas WHERE REGEXP_REPLACE(cedula, '[^0-9]', '', 'g') = %s",
-            (numeros_cedula,)
+            "SELECT * FROM personas WHERE cedula = %s OR cedula = %s",
+            (cedula, numeros_cedula)
         )
 
         if persona:
@@ -508,7 +554,7 @@ def eliminar_persona(persona_id):
         else:
             flash('No se encontró el trabajador para eliminar', 'error')
     except Exception as e:
-        flash(f'Error al elimizar: {str(e)}', 'error')
+        flash(f'Error al eliminar: {str(e)}', 'error')
     
     return redirect(url_for('admin_dashboard'))
 
