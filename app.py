@@ -53,13 +53,12 @@ connection_pool = None
 
 def init_connection_pool():
     global connection_pool
+    print(f"Inicializando pool. DATABASE_URL: {DATABASE_URL[:50]}...")  # DEBUG
     if DATABASE_URL and not connection_pool:
         try:
-            # Configuración optimizada para Supabase
             connection_pool = psycopg2.pool.SimpleConnectionPool(
-                1, 10,  # Reducir conexiones para Supabase
+                1, 10,
                 DATABASE_URL,
-                # Parámetros adicionales para Supabase
                 connect_timeout=10,
                 application_name='flask_trabajadores'
             )
@@ -104,13 +103,18 @@ def delete_from_cloudinary(foto_url):
     return None
 
 def get_db_connection():
+    print(f"DATABASE_URL exists: {DATABASE_URL is not None}")  # DEBUG
+    print(f"connection_pool exists: {connection_pool is not None}")  # DEBUG
+    
     if DATABASE_URL:
         try:
             if connection_pool:
+                print("Usando connection pool")  # DEBUG
                 conn = connection_pool.getconn()
                 conn.cursor_factory = RealDictCursor
                 return conn
             else:
+                print("Pool no disponible, conexión directa")  # DEBUG
                 return psycopg2.connect(
                     DATABASE_URL, 
                     cursor_factory=RealDictCursor,
@@ -118,13 +122,7 @@ def get_db_connection():
                 )
         except psycopg2.OperationalError as e:
             print(f"Error de conexión a Supabase: {e}")
-            # Intentar reconectar
-            if connection_pool:
-                init_connection_pool()
-                if connection_pool:
-                    conn = connection_pool.getconn()
-                    conn.cursor_factory = RealDictCursor
-                    return conn
+            
             raise
     else:
         conn = sqlite3.connect('personas.db')
