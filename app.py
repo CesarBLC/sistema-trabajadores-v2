@@ -311,13 +311,21 @@ def inicio():
 @app.route('/consultar', methods=['POST'])
 def consultar_trabajador():
     cedula = request.form['cedula'].strip()
-    numeros_cedula = ''.join(filter(str.isdigit, cedula))
     
     try:
-        # Buscar por cédula exacta o solo números
+        # Si el usuario ingresa solo números, construir el formato V-XXXXXXX
+        if cedula.isdigit():
+            cedula_completa = f"V-{cedula}"
+        else:
+            cedula_completa = cedula
+        
+        # Extraer solo números para búsqueda alternativa
+        numeros_cedula = ''.join(filter(str.isdigit, cedula))
+        
+        # Buscar por cédula completa, formato V-XXXXXXX, o solo números
         persona = execute_query_one(
-            "SELECT * FROM personas WHERE cedula = %s OR cedula = %s",
-            (cedula, numeros_cedula)
+            "SELECT * FROM personas WHERE cedula = %s OR cedula = %s OR cedula = %s",
+            (cedula, cedula_completa, f"V-{numeros_cedula}")
         )
 
         if persona:
