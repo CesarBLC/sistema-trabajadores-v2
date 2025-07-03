@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -21,72 +21,38 @@
             padding: 20px;
         }
 
-        /* Barra superior con colores amarillo y rojo */
+        /* Barra superior con colores de Venezuela */
         body::before {
             content: '';
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 8px;
-            background: linear-gradient(90deg, #FFD700 0%, #FFD700 50%, #DC143C 50%, #DC143C 100%);
+            height: 6px;
+            background: linear-gradient(90deg, #FFDD00 33.33%, #003DA5 33.33%, #003DA5 66.66%, #CF142B 66.66%);
             z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .container {
             background: white;
             padding: 50px 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 30px rgba(220, 20, 60, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
             max-width: 500px;
             width: 100%;
-            border: 2px solid #FFD700;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Acento decorativo */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #FFD700, #DC143C);
+            border: 1px solid #e9ecef;
         }
 
         .membrete {
-            font-size: 10px;
-            color: #666;
-            line-height: 1.4;
+            font-size: 11px;
+            color: #6c757d;
+            line-height: 1.3;
             margin-bottom: 20px;
             text-align: center;
-            max-width: 420px;
+            max-width: 400px;
             margin-left: auto;
             margin-right: auto;
-            font-weight: 500;
-        }
-
-        .membrete .title {
-            font-size: 11px;
-            font-weight: 700;
-            color: #DC143C;
-            margin-bottom: 3px;
-        }
-
-        .membrete .subtitle {
-            font-size: 9px;
-            color: #B8860B;
-            margin: 2px 0;
-        }
-
-        .membrete .details {
-            font-size: 8px;
-            color: #888;
-            margin-top: 5px;
         }
 
         /* Contenedor del logo central */
@@ -100,31 +66,29 @@
         .logo-central {
             width: 90px;
             height: 90px;
-            border-radius: 12px;
+            border-radius: 10px;
             object-fit: contain;
             background: white;
-            padding: 5px;
-            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.2);
-            border: 2px solid #FFD700;
+            padding: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
         }
 
         h1 {
-            color: #DC143C;
+            color: #003DA5;
             margin-bottom: 8px;
             font-size: 28px;
-            font-weight: 700;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .sector-text {
-            color: #B8860B;
-            margin-bottom: 25px;
-            font-size: 18px;
             font-weight: 600;
         }
 
+        .sector-text {
+            color: #CF142B;
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
         .subtitle {
-            color: #666;
+            color: #6c757d;
             margin-bottom: 35px;
             font-size: 16px;
             line-height: 1.4;
@@ -138,72 +102,50 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #DC143C;
-            font-weight: 600;
+            color: #495057;
+            font-weight: 500;
             font-size: 15px;
         }
 
         input[type="text"] {
             width: 100%;
             padding: 16px;
-            border: 2px solid #FFD700;
-            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             font-size: 16px;
-            transition: all 0.3s ease;
-            background: #fffef7;
+            transition: border-color 0.2s ease;
+            background: white;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: #DC143C;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
+            border-color: #003DA5;
         }
 
         .btn {
-            background: linear-gradient(135deg, #DC143C 0%, #B91538 100%);
+            background: #003DA5;
             color: white;
             padding: 16px 32px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             width: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            transition: background-color 0.2s ease;
         }
 
         .btn:hover {
-            background: linear-gradient(135deg, #B91538 0%, #A01230 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(220, 20, 60, 0.4);
-        }
-
-        .btn:hover::before {
-            left: 100%;
+            background: #002a7a;
         }
 
         .btn:active {
-            transform: translateY(0);
+            background: #001f5c;
         }
 
         .divider {
             margin: 35px 0;
-            border-top: 2px solid #FFD700;
+            border-top: 1px solid #e9ecef;
             position: relative;
         }
 
@@ -215,86 +157,65 @@
             transform: translateX(-50%);
             background: white;
             padding: 0 15px;
-            color: #B8860B;
+            color: #adb5bd;
             font-size: 14px;
-            font-weight: 600;
         }
 
         .admin-link {
-            color: #666;
+            color: #6c757d;
             font-size: 14px;
         }
 
         .admin-link a {
-            color: #DC143C;
+            color: #CF142B;
             text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .admin-link a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 50%;
-            background: #DC143C;
-            transition: all 0.3s ease;
+            font-weight: 500;
+            transition: color 0.2s ease;
         }
 
         .admin-link a:hover {
-            color: #B91538;
-        }
-
-        .admin-link a:hover::after {
-            width: 100%;
-            left: 0;
+            color: #a10e22;
+            text-decoration: underline;
         }
 
         .alert {
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 25px;
             font-weight: 500;
             border-left: 4px solid;
         }
 
         .alert-error {
-            background-color: #ffeaea;
-            color: #DC143C;
-            border-left-color: #DC143C;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #CF142B;
         }
 
         .alert-success {
-            background-color: #f0f8e6;
-            color: #4a7c2a;
-            border-left-color: #6bb342;
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
         }
 
-        /* Acento sutil con colores amarillo y rojo */
+        /* Acento sutil con colores de Venezuela */
         .venezuela-accent {
             position: absolute;
             top: 20px;
             right: 20px;
             display: flex;
-            gap: 6px;
+            gap: 4px;
         }
 
         .color-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .dot-yellow { 
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-        }
-        .dot-red { 
-            background: linear-gradient(135deg, #DC143C, #B91538);
-        }
+        .dot-yellow { background: #FFDD00; }
+        .dot-blue { background: #003DA5; }
+        .dot-red { background: #CF142B; }
 
         @media (max-width: 600px) {
             .container {
@@ -319,38 +240,28 @@
                 top: 15px;
                 right: 15px;
             }
-
-            .membrete {
-                font-size: 9px;
-            }
-
-            .membrete .title {
-                font-size: 10px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Acento minimalista con colores amarillo y rojo -->
+        <!-- Acento minimalista con colores de Venezuela -->
         <div class="venezuela-accent">
             <div class="color-dot dot-yellow"></div>
+            <div class="color-dot dot-blue"></div>
             <div class="color-dot dot-red"></div>
-            <div class="color-dot dot-yellow"></div>
         </div>
 
         <div class="membrete">
-            <div class="title">F.U.N.T.T.B.C.C.A.C</div>
-            FEDERACIÓN UNITARIA NACIONAL DE TRABAJADORES Y TRABAJADORAS BOLIVARIANOS DE LA<br>
-            CONSTRUCCIÓN, CEMENTO, AFINES, SIMILARES, CONEXOS Y SUS DERIVADOS DE VENEZUELA<br>
-            <div class="subtitle">Según Auto N° 2006-0512 de Fecha 06-10-2006</div>
-            <div class="subtitle">AFILIADO A C.B.T.S. Y F.S.M</div>
-            <div class="details">RIF: J-31697524-0</div>
+            Unión Bolivariana de Trabajadores de la<br>
+            Industria de la Construcción, Cemento, Madera<br>
+            Maquinarias Pesadas, Vialidades y Similares de<br>
+            la República Bolivariana de Venezuela
         </div>
 
         <!-- Logo central único -->
         <div class="logo-container">
-            <img src="{{ url_for('static', filename='images/logo1.png') }}" alt="Logo Central" class="logo-central">
+            <img src="{{ url_for('static', filename='images/logo_central.png') }}" alt="Logo Central" class="logo-central">
         </div>
 
         <h1>Verificación de Trabajadores</h1>
